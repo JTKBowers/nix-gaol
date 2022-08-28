@@ -11,7 +11,7 @@
         pkgs = nixpkgs.legacyPackages.${system};
       in {
         nix-bubblewrap = pkgs.writeShellScriptBin "nix-bubblewrap" ''
-${pkgs.bubblewrap}/bin/bwrap --unshare-all ${let deps = nixpkgs.lib.strings.splitString "\n" (nixpkgs.lib.strings.fileContents (pkgs.writeReferencesToFile pkgs.hello)); in builtins.toString (map (x: "--ro-bind ${x} ${x}") deps)} ${pkgs.hello}/bin/hello
+${pkgs.bubblewrap}/bin/bwrap --unshare-all ${let deps = nixpkgs.lib.strings.splitString "\n" (nixpkgs.lib.strings.fileContents (pkgs.writeReferencesToFile pkgs.hello)); in builtins.toString (map (x: "--ro-bind ${x} ${x}") deps)} ${pkgs.hello}/bin/hello "$@"
 '';
       };
     });
