@@ -10,9 +10,7 @@
       packages = let
         pkgs = nixpkgs.legacyPackages.${system};
       in {
-        nix-bubblewrap = pkgs.writeShellScriptBin "nix-bubblewrap" ''
-${pkgs.bubblewrap}/bin/bwrap --unshare-all ${let deps = nixpkgs.lib.strings.splitString "\n" (nixpkgs.lib.strings.fileContents (pkgs.writeReferencesToFile pkgs.hello)); in builtins.toString (map (x: "--ro-bind ${x} ${x}") deps)} ${pkgs.hello}/bin/hello "$@"
-'';
+        hello-bwrapped = (import ./lib.nix).generateWrapperScript pkgs {pkg=pkgs.hello; name="hello";};
         hello-wayland-bwrapped = pkgs.writeShellScriptBin "hello-wayland-bwrapped" ''set -eux
 ${pkgs.bubblewrap}/bin/bwrap --unshare-all \
 ${let deps = nixpkgs.lib.strings.splitString "\n" "${nixpkgs.lib.strings.fileContents (pkgs.writeReferencesToFile pkgs.hello-wayland)}"; in builtins.toString (map (x: "--ro-bind ${x} ${x}") deps)} \
