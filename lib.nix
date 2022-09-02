@@ -5,8 +5,8 @@ rec {
   generateWrapperScript = pkgs: {pkg, name, logGeneratedCommand, roBindDirs}: pkgs.writeShellScriptBin "bwrapped-${name}" ''set -e${if logGeneratedCommand then "x" else ""}
 ${pkgs.bubblewrap}/bin/bwrap --unshare-all ${generateBindArgs roBindDirs} ${pkg}/bin/${name} "$@"
 '';
-  wrapPackage = nixpkgs: {pkg, name ? pkg.pname, logGeneratedCommand ? false}: let
+  wrapPackage = nixpkgs: {pkg, name ? pkg.pname, logGeneratedCommand ? false, extraRoBindDirs? []}: let
     pkgDeps = deps nixpkgs pkg;
-    roBindDirs = pkgDeps;
+    roBindDirs = pkgDeps ++ extraRoBindDirs;
   in generateWrapperScript nixpkgs {pkg = pkg; name = name; logGeneratedCommand = logGeneratedCommand; roBindDirs = roBindDirs;};
 }
