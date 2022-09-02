@@ -7,6 +7,6 @@ ${pkgs.bubblewrap}/bin/bwrap --unshare-all ${generateBindArgs roBindDirs} ${pkg}
 '';
   wrapPackage = nixpkgs: {pkg, name ? pkg.pname, logGeneratedCommand ? false, extraRoBindDirs? []}: let
     pkgDeps = deps nixpkgs pkg;
-    roBindDirs = pkgDeps ++ extraRoBindDirs;
+    roBindDirs = nixpkgs.lib.lists.unique (pkgDeps ++ extraRoBindDirs);
   in generateWrapperScript nixpkgs {pkg = pkg; name = name; logGeneratedCommand = logGeneratedCommand; roBindDirs = roBindDirs;};
 }
