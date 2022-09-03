@@ -21,24 +21,13 @@
             extraDepPkgs = [ pkgs.rust-analyzer pkgs.rnix-lsp ];
             envs = { HOME = "$HOME"; TERM = "$TERM"; COLORTERM = "$COLORTERM"; };
           };
-          hello-wayland-bwrapped = pkgs.writeShellScriptBin "hello-wayland-bwrapped" ''set -eux
-${pkgs.bubblewrap}/bin/bwrap --unshare-all \
-${let deps = nixpkgs.lib.strings.splitString "\n" "${nixpkgs.lib.strings.fileContents (pkgs.writeReferencesToFile pkgs.hello-wayland)}"; in builtins.toString (map (x: "--ro-bind ${x} ${x}") deps)} \
---ro-bind $XDG_RUNTIME_DIR/wayland-0 $XDG_RUNTIME_DIR/wayland-0 \
-    --setenv XDG_RUNTIME_DIR $XDG_RUNTIME_DIR \
-    --setenv WAYLAND_DISPLAY $WAYLAND_DISPLAY \
-    --dev /dev \
-    --dev-bind /dev/dri /dev/dri \
-    --proc /proc \
-    --ro-bind /sys/devices/ /sys/devices/ \
-    --ro-bind /sys/dev/char /sys/dev/char \
-    --ro-bind /run/opengl-driver /run/opengl-driver \
-    --ro-bind /etc/fonts /etc/fonts \
-    --setenv FONTCONFIG_PATH /etc/fonts/ \
-    --setenv FONTCONFIG_FILE /etc/fonts/fonts.conf \
-    --setenv LIBGL_DEBUG verbose \
-    ${pkgs.hello-wayland}/bin/hello-wayland "$@"
-'';
+          hello-wayland-bwrapped = (import ./lib.nix).wrapPackage pkgs {
+            pkg = pkgs.hello-wayland;
+            name = "hello-wayland";
+            envs = { XDG_RUNTIME_DIR = "$XDG_RUNTIME_DIR"; };
+            extraRoBindDirs = [ "$XDG_RUNTIME_DIR/wayland-0" ];
+            extraArgs = [ "--dev /dev" "--dev-bind /dev/dri /dev/dri" "--proc /proc" ];
+          };
         };
     });
 }
