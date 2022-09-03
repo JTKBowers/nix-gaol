@@ -1,17 +1,19 @@
 rec {
   deps = nixpkgs: pkg: nixpkgs.lib.strings.splitString "\n" (nixpkgs.lib.strings.fileContents (nixpkgs.writeReferencesToFile pkg));
 
+  bindDirectory = path: "--bind ${path} ${path}";
   roBindDirectory = path: "--ro-bind ${path} ${path}";
-  generateBindArgs = paths: builtins.toString (map roBindDirectory paths);
+  generateBindArgs = paths: builtins.toString (map bindDirectory paths);
+  generateRoBindArgs = paths: builtins.toString (map roBindDirectory paths);
 
   setEnv = name: value: "--setenv ${name} ${value}";
   generateEnvArgs = pkgs: envs: builtins.toString (pkgs.lib.attrsets.mapAttrsToList setEnv envs);
-  generateWrapperScript = pkgs: {pkg, name, logGeneratedCommand, roBindDirs, envs}: pkgs.writeShellScriptBin "bwrapped-${name}" ''set -e${if logGeneratedCommand then "x" else ""}
-${pkgs.bubblewrap}/bin/bwrap --unshare-all --clearenv ${generateEnvArgs pkgs envs} ${generateBindArgs roBindDirs} ${pkg}/bin/${name} "$@"
+  generateWrapperScript = pkgs: {pkg, name, logGeneratedCommand, bindDirs, roBindDirs, envs}: pkgs.writeShellScriptBin "bwrapped-${name}" ''set -e${if logGeneratedCommand then "x" else ""}
+${pkgs.bubblewrap}/bin/bwrap --unshare-all --clearenv ${generateEnvArgs pkgs envs} ${generateBindArgs bindDirs} ${generateRoBindArgs roBindDirs} ${pkg}/bin/${name} "$@"
 '';
-  wrapPackage = nixpkgs: {pkg, name ? pkg.pname, logGeneratedCommand ? false, extraRoBindDirs? [], roBindCwd ? false, envs ? {}, extraDepPkgs ? []}: let
+  wrapPackage = nixpkgs: {pkg, name ? pkg.pname, logGeneratedCommand ? false, bindDirs ? [], extraRoBindDirs? [], roBindCwd ? false, envs ? {}, extraDepPkgs ? []}: let
     pkgDeps = (deps nixpkgs pkg) ++ (builtins.concatMap (pkg: deps nixpkgs pkg) extraDepPkgs);
     roBindDirs = nixpkgs.lib.lists.unique (pkgDeps ++ extraRoBindDirs ++ (if roBindCwd then ["$(pwd)"] else []));
     mergedEnvs = {PATH = "$PATH:${nixpkgs.lib.strings.concatMapStringsSep ":" (dep: "${dep}/bin") extraDepPkgs}"; } // envs;
-  in generateWrapperScript nixpkgs {pkg = pkg; name = name; logGeneratedCommand = logGeneratedCommand; roBindDirs = roBindDirs; envs = mergedEnvs;};
+  in generateWrapperScript nixpkgs {pkg = pkg; name = name; logGeneratedCommand = logGeneratedCommand; bindDirs = bindDirs; roBindDirs = roBindDirs; envs = mergedEnvs;};
 }
