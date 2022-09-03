@@ -15,9 +15,10 @@ rec {
                                 , roBindDirs
                                 , envs
                                 , strace
+                                , extraArgs
                                 }:
     pkgs.writeShellScriptBin "bwrapped-${name}" ''set -e${if logGeneratedCommand then "x" else ""}
-${if strace then "${pkgs.strace}/bin/strace " else ""}${pkgs.bubblewrap}/bin/bwrap --unshare-all --clearenv ${generateEnvArgs pkgs envs} ${generateBindArgs bindDirs} ${generateRoBindArgs roBindDirs} ${pkg}/bin/${name} "$@"
+${if strace then "${pkgs.strace}/bin/strace " else ""}${pkgs.bubblewrap}/bin/bwrap --unshare-all --clearenv ${generateEnvArgs pkgs envs} ${generateBindArgs bindDirs} ${generateRoBindArgs roBindDirs} ${builtins.toString extraArgs} ${pkg}/bin/${name} "$@"
 '';
   wrapPackage = nixpkgs: { pkg
                          , name ? pkg.pname
@@ -28,6 +29,7 @@ ${if strace then "${pkgs.strace}/bin/strace " else ""}${pkgs.bubblewrap}/bin/bwr
                          , envs ? { }
                          , extraDepPkgs ? [ ]
                          , strace ? false
+                         , extraArgs ? [ ]
                          }:
     let
       pkgDeps = (deps nixpkgs pkg) ++ (builtins.concatMap (pkg: deps nixpkgs pkg) extraDepPkgs) ++ (if strace then deps nixpkgs nixpkgs.strace else [ ]);
@@ -43,5 +45,6 @@ ${if strace then "${pkgs.strace}/bin/strace " else ""}${pkgs.bubblewrap}/bin/bwr
       roBindDirs = roBindDirs;
       envs = mergedEnvs;
       strace = strace;
+      extraArgs = extraArgs;
     };
 }
