@@ -11,6 +11,7 @@
         pkgs = nixpkgs.legacyPackages.${system};
       in {
         hello-bwrapped = (import ./lib.nix).wrapPackage pkgs {pkg=pkgs.hello;};
+        helix-bwrapped = (import ./lib.nix).wrapPackage pkgs {pkg=pkgs.helix; name="hx"; bindCwd = true;extraDepPkgs=[pkgs.rust-analyzer pkgs.rnix-lsp]; envs = {HOME="$HOME"; TERM="$TERM"; COLORTERM="$COLORTERM";};};
         hello-wayland-bwrapped = pkgs.writeShellScriptBin "hello-wayland-bwrapped" ''set -eux
 ${pkgs.bubblewrap}/bin/bwrap --unshare-all \
 ${let deps = nixpkgs.lib.strings.splitString "\n" "${nixpkgs.lib.strings.fileContents (pkgs.writeReferencesToFile pkgs.hello-wayland)}"; in builtins.toString (map (x: "--ro-bind ${x} ${x}") deps)} \
