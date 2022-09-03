@@ -14,9 +14,10 @@ rec {
                                 , bindDirs
                                 , roBindDirs
                                 , envs
+                                , strace
                                 }:
     pkgs.writeShellScriptBin "bwrapped-${name}" ''set -e${if logGeneratedCommand then "x" else ""}
-${pkgs.bubblewrap}/bin/bwrap --unshare-all --clearenv ${generateEnvArgs pkgs envs} ${generateBindArgs bindDirs} ${generateRoBindArgs roBindDirs} ${pkg}/bin/${name} "$@"
+${if strace then "${pkgs.strace}/bin/strace " else ""}${pkgs.bubblewrap}/bin/bwrap --unshare-all --clearenv ${generateEnvArgs pkgs envs} ${generateBindArgs bindDirs} ${generateRoBindArgs roBindDirs} ${pkg}/bin/${name} "$@"
 '';
   wrapPackage = nixpkgs: { pkg
                          , name ? pkg.pname
@@ -26,9 +27,10 @@ ${pkgs.bubblewrap}/bin/bwrap --unshare-all --clearenv ${generateEnvArgs pkgs env
                          , bindCwd ? false
                          , envs ? { }
                          , extraDepPkgs ? [ ]
+                         , strace ? false
                          }:
     let
-      pkgDeps = (deps nixpkgs pkg) ++ (builtins.concatMap (pkg: deps nixpkgs pkg) extraDepPkgs);
+      pkgDeps = (deps nixpkgs pkg) ++ (builtins.concatMap (pkg: deps nixpkgs pkg) extraDepPkgs) ++ (if strace then deps nixpkgs nixpkgs.strace else [ ]);
       bindDirs = extraBindDirs ++ (if bindCwd == true then [ "$(pwd)" ] else [ ]);
       roBindDirs = nixpkgs.lib.lists.unique (pkgDeps ++ extraRoBindDirs ++ (if bindCwd == "ro" then [ "$(pwd)" ] else [ ]));
       mergedEnvs = { PATH = "$PATH:${nixpkgs.lib.strings.concatMapStringsSep ":" (dep: "${dep}/bin") extraDepPkgs}"; } // envs;
@@ -40,5 +42,6 @@ ${pkgs.bubblewrap}/bin/bwrap --unshare-all --clearenv ${generateEnvArgs pkgs env
       bindDirs = bindDirs;
       roBindDirs = roBindDirs;
       envs = mergedEnvs;
+      strace = strace;
     };
 }
