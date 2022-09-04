@@ -8,6 +8,9 @@
       supportedPlatforms = builtins.filter (x: (builtins.getAttr x nixpkgs.legacyPackages) ? busybox) (builtins.attrNames nixpkgs.legacyPackages);
     in
     flake-utils.lib.eachSystem supportedPlatforms (system: {
+      lib = {
+        wrapPackage = (import ./lib.nix).wrapPackage;
+      };
       packages =
         let
           pkgs = nixpkgs.legacyPackages.${system};
