@@ -7,10 +7,7 @@
       # As this flake only provides wrappers for calling bubblewrap, we can only support the platforms that bubblewrap supports
       supportedPlatforms = builtins.filter (x: (builtins.getAttr x nixpkgs.legacyPackages) ? busybox) (builtins.attrNames nixpkgs.legacyPackages);
     in
-    flake-utils.lib.eachSystem supportedPlatforms (system: {
-      lib = {
-        wrapPackage = (import ./lib.nix).wrapPackage;
-      };
+    (flake-utils.lib.eachSystem supportedPlatforms (system: {
       packages =
         let
           pkgs = nixpkgs.legacyPackages.${system};
@@ -32,5 +29,7 @@
             extraArgs = [ "--dev /dev" "--dev-bind /dev/dri /dev/dri" "--proc /proc" ];
           };
         };
-    });
+    })) // {
+      lib = { wrapPackage = (import ./lib.nix).wrapPackage; };
+    };
 }
