@@ -31,5 +31,6 @@
         };
     })) // {
       lib = { wrapPackage = (import ./lib.nix).wrapPackage; };
+      nixosModule = import ./nixos-module.nix;
     };
 }
