@@ -17,7 +17,7 @@ rec {
                                 , strace
                                 , extraArgs
                                 }:
-    pkgs.writeShellScriptBin "bwrapped-${name}" ''set -e${if logGeneratedCommand then "x" else ""}
+    pkgs.writeShellScriptBin name ''set -e${if logGeneratedCommand then "x" else ""}
 ${if strace then "${pkgs.strace}/bin/strace " else ""}${pkgs.bubblewrap}/bin/bwrap --unshare-all --clearenv ${generateEnvArgs pkgs envs} ${generateBindArgs bindDirs} ${generateRoBindArgs roBindDirs} ${builtins.toString extraArgs} ${pkg}/bin/${name} "$@"
 '';
   wrapPackage = nixpkgs: { pkg
