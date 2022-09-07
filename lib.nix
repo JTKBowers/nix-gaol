@@ -3,11 +3,10 @@ rec {
 
   bindDirectory = path: "--bind ${path} ${path}";
   roBindDirectory = path: "--ro-bind ${path} ${path}";
-  generateBindArgs = paths: builtins.toString (map bindDirectory paths);
-  generateRoBindArgs = paths: builtins.toString (map roBindDirectory paths);
+  buildCommand = entries: builtins.concatStringsSep " " entries;
 
   setEnv = name: value: "--setenv ${name} ${value}";
-  generateEnvArgs = pkgs: envs: builtins.toString (pkgs.lib.attrsets.mapAttrsToList setEnv envs);
+  generateEnvArgs = pkgs: envs: pkgs.lib.attrsets.mapAttrsToList setEnv envs;
   generateWrapperScript = pkgs: { pkg
                                 , name
                                 , logGeneratedCommand
@@ -18,7 +17,18 @@ rec {
                                 , extraArgs
                                 }:
     pkgs.writeShellScriptBin name ''set -e${if logGeneratedCommand then "x" else ""}
-${pkgs.bubblewrap}/bin/bwrap --unshare-all --clearenv ${generateEnvArgs pkgs envs} ${generateBindArgs bindDirs} ${generateRoBindArgs roBindDirs} ${builtins.toString extraArgs} ${if strace then "${pkgs.strace}/bin/strace -f " else ""}${pkg}/bin/${name} "$@"
+${buildCommand (pkgs.lib.lists.flatten [
+  "${pkgs.bubblewrap}/bin/bwrap"
+  "--unshare-all"
+  "--clearenv"
+  (generateEnvArgs pkgs envs)
+  (map bindDirectory bindDirs)
+  (map roBindDirectory roBindDirs)
+  (builtins.toString extraArgs)
+  (if strace then "${pkgs.strace}/bin/strace -f" else "")
+  "${pkg}/bin/${name}"
+  "$@"
+])}
 '';
   wrapPackage = nixpkgs: { pkg
                          , name ? pkg.pname
