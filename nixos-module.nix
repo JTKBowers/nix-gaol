@@ -13,6 +13,8 @@ let
       extraArgs = mkOption { type = types.listOf types.str; description = "Extra arguments to pass to bwrap."; default = [ ]; };
       strace = mkOption { type = types.bool; description = "Whether to call the wrapped program using strace to log its syscalls"; default = false; };
       logGeneratedCommand = mkOption { type = types.bool; description = "Whether to log the generated bubblewrap command when it is run"; default = false; };
+      extraBindDirs = mkOption { type = types.listOf types.str; description = "Extra directories to bind into the sandbox"; default = [ ]; };
+      extraRoBindDirs = mkOption { type = types.listOf types.str; description = "Extra directories to ro-bind into the sandbox"; default = [ ]; };
     };
   };
 in
