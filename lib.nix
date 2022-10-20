@@ -19,7 +19,12 @@ rec {
     pkgs.writeShellScriptBin name ''set -e${if logGeneratedCommand then "x" else ""}
 ${buildCommand (pkgs.lib.lists.flatten [
   "${pkgs.bubblewrap}/bin/bwrap"
-  "--unshare-all"
+  "--unshare-user"
+  "--unshare-ipc"
+  "--unshare-pid"
+  "--unshare-net"
+  "--unshare-uts"
+  "--unshare-cgroup"
   "--clearenv"
   (generateEnvArgs pkgs envs)
   (map bindDirectory bindDirs)
