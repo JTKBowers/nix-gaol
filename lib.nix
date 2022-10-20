@@ -5,6 +5,8 @@ rec {
   roBindDirectory = path: "--ro-bind ${path} ${path}";
   buildCommand = entries: builtins.concatStringsSep " " entries;
 
+  buildUnshareUserArg = shareUser: if shareUser then [ ] else "--unshare-user";
+
   setEnv = name: value: "--setenv ${name} ${value}";
   generateEnvArgs = pkgs: envs: pkgs.lib.attrsets.mapAttrsToList setEnv envs;
   generateWrapperScript = pkgs: { pkg
@@ -15,11 +17,12 @@ rec {
                                 , envs
                                 , strace
                                 , extraArgs
+                                , shareUser
                                 }:
     pkgs.writeShellScriptBin name ''set -e${if logGeneratedCommand then "x" else ""}
 ${buildCommand (pkgs.lib.lists.flatten [
   "${pkgs.bubblewrap}/bin/bwrap"
-  "--unshare-user"
+  (buildUnshareUserArg shareUser)
   "--unshare-ipc"
   "--unshare-pid"
   "--unshare-net"
@@ -45,6 +48,7 @@ ${buildCommand (pkgs.lib.lists.flatten [
                          , extraDepPkgs ? [ ]
                          , strace ? false
                          , extraArgs ? [ ]
+                         , shareUser ? false
                          }:
     let
       pkgDeps = (deps nixpkgs pkg) ++ (builtins.concatMap (pkg: deps nixpkgs pkg) extraDepPkgs) ++ (if strace then deps nixpkgs nixpkgs.strace else [ ]);
@@ -61,5 +65,6 @@ ${buildCommand (pkgs.lib.lists.flatten [
       envs = mergedEnvs;
       strace = strace;
       extraArgs = extraArgs;
+      shareUser = shareUser;
     };
 }

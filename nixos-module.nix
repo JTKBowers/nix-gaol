@@ -15,6 +15,7 @@ let
       logGeneratedCommand = mkOption { type = types.bool; description = "Whether to log the generated bubblewrap command when it is run"; default = false; };
       extraBindDirs = mkOption { type = types.listOf types.str; description = "Extra directories to bind into the sandbox"; default = [ ]; };
       extraRoBindDirs = mkOption { type = types.listOf types.str; description = "Extra directories to ro-bind into the sandbox"; default = [ ]; };
+      shareUser = mkOption { type = types.bool; description = "Whether to share the user. If false (the default) it will create a new user namespace"; default = false; };
     };
   };
 in
