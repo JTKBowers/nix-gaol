@@ -6,6 +6,8 @@ rec {
   buildCommand = entries: builtins.concatStringsSep " " entries;
 
   buildUnshareUserArg = shareUser: if shareUser then [ ] else "--unshare-user";
+  buildUnshareIpcArg = shareIpc: if shareIpc then [ ] else "--unshare-ipc";
+
 
   setEnv = name: value: "--setenv ${name} ${value}";
   generateEnvArgs = pkgs: envs: pkgs.lib.attrsets.mapAttrsToList setEnv envs;
@@ -18,12 +20,13 @@ rec {
                                 , strace
                                 , extraArgs
                                 , shareUser
+                                , shareIpc
                                 }:
     pkgs.writeShellScriptBin name ''set -e${if logGeneratedCommand then "x" else ""}
 ${buildCommand (pkgs.lib.lists.flatten [
   "${pkgs.bubblewrap}/bin/bwrap"
   (buildUnshareUserArg shareUser)
-  "--unshare-ipc"
+  (buildUnshareIpcArg shareIpc)
   "--unshare-pid"
   "--unshare-net"
   "--unshare-uts"
@@ -49,6 +52,7 @@ ${buildCommand (pkgs.lib.lists.flatten [
                          , strace ? false
                          , extraArgs ? [ ]
                          , shareUser ? false
+                         , shareIpc ? false
                          }:
     let
       pkgDeps = (deps nixpkgs pkg) ++ (builtins.concatMap (pkg: deps nixpkgs pkg) extraDepPkgs) ++ (if strace then deps nixpkgs nixpkgs.strace else [ ]);
@@ -66,5 +70,6 @@ ${buildCommand (pkgs.lib.lists.flatten [
       strace = strace;
       extraArgs = extraArgs;
       shareUser = shareUser;
+      shareIpc = shareIpc;
     };
 }

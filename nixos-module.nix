@@ -16,6 +16,7 @@ let
       extraBindDirs = mkOption { type = types.listOf types.str; description = "Extra directories to bind into the sandbox"; default = [ ]; };
       extraRoBindDirs = mkOption { type = types.listOf types.str; description = "Extra directories to ro-bind into the sandbox"; default = [ ]; };
       shareUser = mkOption { type = types.bool; description = "Whether to share the user. If false (the default) it will create a new user namespace"; default = false; };
+      shareIpc = mkOption { type = types.bool; description = "Whether to share IPC. If false (the default) it will create a new IPC namespace"; default = false; };
     };
   };
 in
