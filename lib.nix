@@ -38,7 +38,7 @@ ${buildCommand (pkgs.lib.lists.flatten [
   (builtins.toString extraArgs)
   (if strace then "${pkgs.strace}/bin/strace -f" else "")
   "${pkg}/bin/${name}"
-  "$@"
+  "\"$@\""
 ])}
 '';
   wrapPackage = nixpkgs: { pkg
