@@ -58,7 +58,7 @@ ${buildCommand (pkgs.lib.lists.flatten [
       pkgDeps = (deps nixpkgs pkg) ++ (builtins.concatMap (pkg: deps nixpkgs pkg) extraDepPkgs) ++ (if strace then deps nixpkgs nixpkgs.strace else [ ]);
       bindDirs = extraBindDirs ++ (if bindCwd == true then [ "$(pwd)" ] else [ ]);
       roBindDirs = nixpkgs.lib.lists.unique (pkgDeps ++ extraRoBindDirs ++ (if bindCwd == "ro" then [ "$(pwd)" ] else [ ]));
-      mergedEnvs = { PATH = "$PATH:${nixpkgs.lib.strings.concatMapStringsSep ":" (dep: "${dep}/bin") extraDepPkgs}"; } // envs;
+      mergedEnvs = { PATH = "$PATH:${pkg}/bin:${nixpkgs.lib.strings.concatMapStringsSep ":" (dep: "${dep}/bin") extraDepPkgs}"; } // envs;
     in
     generateWrapperScript nixpkgs {
       pkg = pkg;
