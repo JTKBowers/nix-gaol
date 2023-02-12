@@ -45,7 +45,7 @@ rec {
         (
           if strace
           then "${pkgs.strace}/bin/strace -f"
-          else ""
+          else []
         )
         "${pkg}/bin/${name}"
         "\"$@\""
@@ -86,7 +86,11 @@ rec {
         then ["$(pwd)"]
         else []
       ));
-    mergedEnvs = {PATH = "$PATH:${pkg}/bin:${nixpkgs.lib.strings.concatMapStringsSep ":" (dep: "${dep}/bin") extraDepPkgs}";} // envs;
+    mergedEnvs =
+      {
+        PATH = builtins.concatStringsSep ":" (["$PATH" "${pkg}/bin"] ++ (builtins.map (dep: "${dep}/bin") extraDepPkgs));
+      }
+      // envs;
   in
     generateWrapperScript nixpkgs {
       pkg = pkg;
