@@ -19,7 +19,6 @@ rec {
   generateWrapperScript = pkgs: {
     pkg,
     name,
-    logGeneratedCommand,
     bindDirs,
     roBindDirs,
     envs,
@@ -28,11 +27,8 @@ rec {
     shareUser,
     shareIpc,
   }:
-    pkgs.writeShellScriptBin name ''      set -e${
-        if logGeneratedCommand
-        then "x"
-        else ""
-      }
+    pkgs.writeShellScriptBin name ''
+      set -e
       ${buildCommand (pkgs.lib.lists.flatten [
         "${pkgs.bubblewrap}/bin/bwrap"
         (buildUnshareUserArg shareUser)
@@ -58,7 +54,6 @@ rec {
   wrapPackage = nixpkgs: {
     pkg,
     name ? pkg.pname,
-    logGeneratedCommand ? false,
     extraBindDirs ? [],
     extraRoBindDirs ? [],
     bindCwd ? false,
@@ -96,7 +91,6 @@ rec {
     generateWrapperScript nixpkgs {
       pkg = pkg;
       name = name;
-      logGeneratedCommand = logGeneratedCommand;
       bindDirs = bindDirs;
       roBindDirs = roBindDirs;
       envs = mergedEnvs;
