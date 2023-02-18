@@ -100,16 +100,17 @@ rec {
     shareCgroup ? false,
     clearEnv ? true,
   }: let
+    getDeps = deps nixpkgs;
     pkgDeps =
-      (deps nixpkgs pkg)
-      ++ (builtins.concatMap (pkg: deps nixpkgs pkg) extraDepPkgs)
+      (getDeps pkg)
+      ++ (builtins.concatMap getDeps extraDepPkgs)
       ++ (
         if strace
-        then deps nixpkgs nixpkgs.strace
+        then getDeps nixpkgs.strace
         else []
       );
     bindDirs =
-      extraBindDirs
+      extraRoBindDirs
       ++ (
         if bindCwd == true
         then ["$(pwd)"]
