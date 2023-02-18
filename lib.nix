@@ -5,17 +5,38 @@ rec {
   roBindDirectory = path: "--ro-bind ${path} ${path}";
   buildCommand = entries: builtins.concatStringsSep " " entries;
 
-  buildUnshareUserArg = shareUser:
-    if shareUser
-    then []
-    else "--unshare-user";
-  buildUnshareIpcArg = shareIpc:
-    if shareIpc
-    then []
-    else "--unshare-ipc";
+  buildOptionalArg = cond: value:
+    if cond
+    then value
+    else [];
+  buildBwrapCommand = flatten: {
+    bwrapPkg,
+    execPath,
+    bindDirs,
+    roBindDirs,
+    envs,
+    extraArgs,
+    shareUser,
+    shareIpc,
+  }: (buildCommand (flatten [
+    "${bwrapPkg}/bin/bwrap"
+    (buildOptionalArg (!shareUser) "--unshare-user")
+    (buildOptionalArg (!shareIpc) "--unshare-ipc")
+    "--unshare-pid"
+    "--unshare-net"
+    "--unshare-uts"
+    "--unshare-cgroup"
+    "--clearenv"
+    (generateEnvArgs envs)
+    (map bindDirectory bindDirs)
+    (map roBindDirectory roBindDirs)
+    (builtins.toString extraArgs)
+    execPath
+    "\"$@\""
+  ]));
 
   setEnv = name: value: "--setenv ${name} ${value}";
-  generateEnvArgs = pkgs: envs: pkgs.lib.attrsets.mapAttrsToList setEnv envs;
+  generateEnvArgs = envs: builtins.map (name: (setEnv name (builtins.getAttr name envs))) (builtins.attrNames envs);
   generateWrapperScript = pkgs: {
     pkg,
     name,
@@ -29,27 +50,22 @@ rec {
   }:
     pkgs.writeShellScriptBin name ''
       set -e
-      ${buildCommand (pkgs.lib.lists.flatten [
-        "${pkgs.bubblewrap}/bin/bwrap"
-        (buildUnshareUserArg shareUser)
-        (buildUnshareIpcArg shareIpc)
-        "--unshare-pid"
-        "--unshare-net"
-        "--unshare-uts"
-        "--unshare-cgroup"
-        "--clearenv"
-        (generateEnvArgs pkgs envs)
-        (map bindDirectory bindDirs)
-        (map roBindDirectory roBindDirs)
-        (builtins.toString extraArgs)
-        (
-          if strace
-          then "${pkgs.strace}/bin/strace -f"
-          else []
-        )
-        "${pkg}/bin/${name}"
-        "\"$@\""
-      ])}
+      ${buildBwrapCommand pkgs.lib.lists.flatten {
+        bwrapPkg = pkgs.bubblewrap;
+        execPath =
+          (
+            if strace
+            then "${pkgs.strace}/bin/strace -f"
+            else ""
+          )
+          + "${pkg}/bin/${name}";
+        bindDirs = bindDirs;
+        roBindDirs = roBindDirs;
+        envs = envs;
+        extraArgs = extraArgs;
+        shareUser = shareUser;
+        shareIpc = shareIpc;
+      }}
     '';
   wrapPackage = nixpkgs: {
     pkg,
