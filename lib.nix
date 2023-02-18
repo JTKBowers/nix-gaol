@@ -18,15 +18,20 @@ rec {
     extraArgs,
     shareUser,
     shareIpc,
+    sharePid,
+    shareNet,
+    shareUts,
+    shareCgroup,
+    clearEnv,
   }: (buildCommand (flatten [
     "${bwrapPkg}/bin/bwrap"
     (buildOptionalArg (!shareUser) "--unshare-user")
     (buildOptionalArg (!shareIpc) "--unshare-ipc")
-    "--unshare-pid"
-    "--unshare-net"
-    "--unshare-uts"
-    "--unshare-cgroup"
-    "--clearenv"
+    (buildOptionalArg (!sharePid) "--unshare-pid")
+    (buildOptionalArg (!shareNet) "--unshare-net")
+    (buildOptionalArg (!shareUts) "--unshare-uts")
+    (buildOptionalArg (!shareCgroup) "--unshare-cgroup")
+    (buildOptionalArg clearEnv "--clearenv")
     (generateEnvArgs envs)
     (map bindDirectory bindDirs)
     (map roBindDirectory roBindDirs)
@@ -47,6 +52,11 @@ rec {
     extraArgs,
     shareUser,
     shareIpc,
+    sharePid,
+    shareNet,
+    shareUts,
+    shareCgroup,
+    clearEnv,
   }:
     pkgs.writeShellScriptBin name ''
       set -e
@@ -65,6 +75,11 @@ rec {
         extraArgs = extraArgs;
         shareUser = shareUser;
         shareIpc = shareIpc;
+        sharePid = sharePid;
+        shareUts = shareUts;
+        shareNet = shareNet;
+        shareCgroup = shareCgroup;
+        clearEnv = clearEnv;
       }}
     '';
   wrapPackage = nixpkgs: {
@@ -79,6 +94,11 @@ rec {
     extraArgs ? [],
     shareUser ? false,
     shareIpc ? false,
+    sharePid ? false,
+    shareNet ? false,
+    shareUts ? false,
+    shareCgroup ? false,
+    clearEnv ? true,
   }: let
     pkgDeps =
       (deps nixpkgs pkg)
@@ -118,5 +138,10 @@ rec {
       extraArgs = extraArgs;
       shareUser = shareUser;
       shareIpc = shareIpc;
+      sharePid = sharePid;
+      shareUts = shareUts;
+      shareNet = shareNet;
+      shareCgroup = shareCgroup;
+      clearEnv = clearEnv;
     };
 }

@@ -63,6 +63,31 @@ with lib; let
         description = "Whether to share IPC. If false (the default) it will create a new IPC namespace";
         default = false;
       };
+      sharePid = mkOption {
+        type = types.bool;
+        description = "Whether to share PID. If false (the default) it will create a new PID namespace";
+        default = false;
+      };
+      shareNet = mkOption {
+        type = types.bool;
+        description = "Whether to allow network access in the sandbox.";
+        default = false;
+      };
+      shareUts = mkOption {
+        type = types.bool;
+        description = "Whether to share UTS. If false (the default) it will create a new UTS namespace";
+        default = false;
+      };
+      shareCgroup = mkOption {
+        type = types.bool;
+        description = "Whether to share the cgroup. If false (the default) it will create a new cgroup namespace";
+        default = false;
+      };
+      clearEnv = mkOption {
+        type = types.bool;
+        description = "Whether to clear the environment variables. If true it will pass in the environment variables from the context in which it is run.";
+        default = true;
+      };
     };
   };
 in {
