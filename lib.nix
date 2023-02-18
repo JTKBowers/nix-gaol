@@ -100,7 +100,11 @@ rec {
     shareCgroup ? false,
     clearEnv ? true,
   }: let
+    # Some scoped helper functions
     getDeps = deps nixpkgs;
+    getBinDir = pkg: "${pkg}/bin";
+
+    # Build the nix-specific things into generic bwrap args
     pkgDeps =
       (getDeps pkg)
       ++ (builtins.concatMap getDeps extraDepPkgs)
@@ -125,7 +129,7 @@ rec {
       ));
     mergedEnvs =
       {
-        PATH = builtins.concatStringsSep ":" (["$PATH" "${pkg}/bin"] ++ (builtins.map (dep: "${dep}/bin") extraDepPkgs));
+        PATH = builtins.concatStringsSep ":" (["$PATH" (getBinDir pkg)] ++ (builtins.map getBinDir extraDepPkgs));
       }
       // envs;
   in
