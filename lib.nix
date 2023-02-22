@@ -114,7 +114,7 @@ rec {
         else []
       );
     bindDirs =
-      extraRoBindDirs
+      extraBindDirs
       ++ (
         if bindCwd == true
         then ["$(pwd)"]
