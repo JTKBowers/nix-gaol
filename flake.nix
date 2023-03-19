@@ -5,12 +5,8 @@
     self,
     nixpkgs,
     flake-utils,
-  }: let
-    # These are all the platforms that contain a bubblewrap package
-    # As this flake only provides wrappers for calling bubblewrap, we can only support the platforms that bubblewrap supports
-    supportedPlatforms = builtins.filter (x: (builtins.getAttr x nixpkgs.legacyPackages) ? busybox) (builtins.attrNames nixpkgs.legacyPackages);
-  in
-    (flake-utils.lib.eachSystem supportedPlatforms (system: {
+  }:
+    flake-utils.lib.eachDefaultSystem (system: {
       packages = let
         pkgs = nixpkgs.legacyPackages.${system};
       in {
@@ -34,7 +30,7 @@
           extraArgs = ["--dev /dev" "--dev-bind /dev/dri /dev/dri" "--proc /proc"];
         };
       };
-    }))
+    })
     // {
       lib = {wrapPackage = (import ./lib.nix).wrapPackage;};
       nixosModule = import ./nixos-module.nix;
