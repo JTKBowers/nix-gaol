@@ -90,9 +90,11 @@ rec {
         }}' >> "$out/bin/${name}"
         chmod 0755 "$out/bin/${name}"
 
-        cp -r "${pkg}/share" "$out/share"
-        ! grep "${pkg}/bin" -r "$out/share/"
-        exit $?
+        if [ -d "${pkg}/share" ]; then
+          cp -r "${pkg}/share" "$out/share"
+          ! grep "${pkg}/bin" -r "$out/share/"
+          exit $?
+        fi
       '';
     };
   wrapPackage = nixpkgs: {
