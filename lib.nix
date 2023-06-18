@@ -89,6 +89,10 @@ rec {
           clearEnv = clearEnv;
         }}' >> "$out/bin/${name}"
         chmod 0755 "$out/bin/${name}"
+
+        cp -r "${pkg}/share" "$out/share"
+        ! grep "${pkg}/bin" -r "$out/share/"
+        exit $?
       '';
     };
   wrapPackage = nixpkgs: {
