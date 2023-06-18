@@ -58,30 +58,39 @@ rec {
     shareCgroup,
     clearEnv,
   }:
-    pkgs.writeShellScriptBin name ''
-      set -e
-      ${buildBwrapCommand pkgs.lib.lists.flatten {
-        bwrapPkg = pkgs.bubblewrap;
-        execPath =
-          (
-            if strace
-            then "${pkgs.strace}/bin/strace -f"
-            else ""
-          )
-          + "${pkg}/bin/${name}";
-        bindDirs = bindDirs;
-        roBindDirs = roBindDirs;
-        envs = envs;
-        extraArgs = extraArgs;
-        shareUser = shareUser;
-        shareIpc = shareIpc;
-        sharePid = sharePid;
-        shareUts = shareUts;
-        shareNet = shareNet;
-        shareCgroup = shareCgroup;
-        clearEnv = clearEnv;
-      }}
-    '';
+    pkgs.stdenvNoCC.mkDerivation {
+      inherit name;
+
+      phases = "installPhase";
+
+      installPhase = ''
+        mkdir -p "$out/bin"
+        echo "#! ${pkgs.stdenv.shell}" >> "$out/bin/${name}"
+        echo "set -e" >> "$out/bin/${name}"
+        echo 'exec ${buildBwrapCommand pkgs.lib.lists.flatten {
+          bwrapPkg = pkgs.bubblewrap;
+          execPath =
+            (
+              if strace
+              then "${pkgs.strace}/bin/strace -f"
+              else ""
+            )
+            + "${pkg}/bin/${name}";
+          bindDirs = bindDirs;
+          roBindDirs = roBindDirs;
+          envs = envs;
+          extraArgs = extraArgs;
+          shareUser = shareUser;
+          shareIpc = shareIpc;
+          sharePid = sharePid;
+          shareUts = shareUts;
+          shareNet = shareNet;
+          shareCgroup = shareCgroup;
+          clearEnv = clearEnv;
+        }}' >> "$out/bin/${name}"
+        chmod 0755 "$out/bin/${name}"
+      '';
+    };
   wrapPackage = nixpkgs: {
     pkg,
     name ? pkg.pname,
