@@ -9,9 +9,11 @@
     flake-utils.lib.eachDefaultSystem (system: {
       packages = let
         pkgs = nixpkgs.legacyPackages.${system};
+        wrapPackage =
+          (import ./lib.nix).wrapPackage pkgs;
       in {
-        hello-bwrapped = (import ./lib.nix).wrapPackage pkgs {pkg = pkgs.hello;};
-        helix-bwrapped = (import ./lib.nix).wrapPackage pkgs {
+        hello-bwrapped = wrapPackage {pkg = pkgs.hello;};
+        helix-bwrapped = wrapPackage {
           pkg = pkgs.helix;
           name = "hx";
           bindCwd = true;
@@ -22,7 +24,7 @@
             COLORTERM = "$COLORTERM";
           };
         };
-        hello-wayland-bwrapped = (import ./lib.nix).wrapPackage pkgs {
+        hello-wayland-bwrapped = wrapPackage {
           pkg = pkgs.hello-wayland;
           name = "hello-wayland";
           envs = {XDG_RUNTIME_DIR = "$XDG_RUNTIME_DIR";};
