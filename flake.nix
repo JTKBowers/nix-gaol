@@ -8,7 +8,9 @@
   }:
     flake-utils.lib.eachDefaultSystem (system: {
       packages = let
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs = import nixpkgs {
+          inherit system;
+        };
         wrapPackage =
           (import ./lib.nix).wrapPackage pkgs;
       in {
