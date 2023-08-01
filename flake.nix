@@ -15,6 +15,24 @@
           (import ./lib.nix).wrapPackage pkgs;
       in {
         hello-bwrapped = wrapPackage {pkg = pkgs.hello;};
+        curl-bwrapped = wrapPackage {
+          pkg = pkgs.curl;
+          shareNet = true;
+          extraDepPkgs = [
+            pkgs.cacert
+          ];
+          extraBindPaths = [
+            # See https://github.com/NixOS/nixpkgs/blob/af11c51c47abb23e6730b34790fd47dc077b9eda/nixos/modules/security/ca.nix#L80
+            {
+              srcPath = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+              dstPath = "/etc/ssl/certs/ca-certificates.crt";
+            }
+            {
+              srcPath = "${pkgs.cacert.p11kit}/etc/ssl/trust-source";
+              dstPath = "/etc/ssl/trust-source";
+            }
+          ];
+        };
         helix-bwrapped = wrapPackage {
           pkg = pkgs.helix;
           name = "hx";
