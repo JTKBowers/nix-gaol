@@ -83,6 +83,11 @@ with lib; let
         description = "Whether to clear the environment variables. If true it will pass in the environment variables from the context in which it is run.";
         default = true;
       };
+      presets = mkOption {
+        type = types.list types.enum ["ssl"];
+        description = "Presets for common functionality";
+        default = false;
+      };
     };
   };
 in {

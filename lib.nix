@@ -131,6 +131,7 @@ rec {
     shareUts ? false,
     shareCgroup ? false,
     clearEnv ? true,
+    presets ? [],
   }: let
     # Some scoped helper functions
     getDeps = deps nixpkgs;
@@ -143,6 +144,11 @@ rec {
       ++ (
         if strace
         then getDeps nixpkgs.strace
+        else []
+      )
+      ++ (
+        if builtins.elem "ssl" presets
+        then getDeps nixpkgs.cacert
         else []
       );
     bindPaths = nixpkgs.lib.lists.unique (
@@ -164,6 +170,21 @@ rec {
           {
             mode = "ro";
             path = "$(pwd)";
+          }
+        ]
+        else []
+      )
+      ++ (
+        if builtins.elem "ssl" presets
+        then [
+          # See https://github.com/NixOS/nixpkgs/blob/af11c51c47abb23e6730b34790fd47dc077b9eda/nixos/modules/security/ca.nix#L80
+          {
+            srcPath = "${nixpkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+            dstPath = "/etc/ssl/certs/ca-certificates.crt";
+          }
+          {
+            srcPath = "${nixpkgs.cacert.p11kit}/etc/ssl/trust-source";
+            dstPath = "/etc/ssl/trust-source";
           }
         ]
         else []
