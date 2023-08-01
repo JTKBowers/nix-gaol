@@ -1,8 +1,30 @@
 rec {
   deps = nixpkgs: pkg: nixpkgs.lib.strings.splitString "\n" (nixpkgs.lib.strings.fileContents (nixpkgs.writeReferencesToFile pkg));
 
-  bindDirectory = path: "--bind ${path} ${path}";
-  roBindDirectory = path: "--ro-bind ${path} ${path}";
+  bindPath' = {
+    srcPath,
+    dstPath,
+    mode,
+  }:
+    if mode == "rw"
+    then "--bind ${srcPath} ${dstPath}"
+    else "--ro-bind ${srcPath} ${dstPath}";
+
+  bindPath = path:
+    if (builtins.isPath path || builtins.isString path)
+    then
+      bindPath' {
+        mode = "ro";
+        srcPath = path;
+        dstPath = path;
+      }
+    else
+      bindPath' {
+        mode = path.mode or "ro";
+        srcPath = path.srcPath or path.path;
+        dstPath = path.dstPath or path.path;
+      };
+
   buildCommand = entries: builtins.concatStringsSep " " entries;
 
   buildOptionalArg = cond: value:
@@ -12,8 +34,7 @@ rec {
   buildBwrapCommand = flatten: {
     bwrapPkg,
     execPath,
-    bindDirs,
-    roBindDirs,
+    bindPaths,
     envs,
     extraArgs,
     shareUser,
@@ -33,8 +54,7 @@ rec {
     (buildOptionalArg (!shareCgroup) "--unshare-cgroup")
     (buildOptionalArg clearEnv "--clearenv")
     (generateEnvArgs envs)
-    (map bindDirectory bindDirs)
-    (map roBindDirectory roBindDirs)
+    (map bindPath bindPaths)
     (builtins.toString extraArgs)
     execPath
     "\"$@\""
@@ -45,8 +65,7 @@ rec {
   generateWrapperScript = pkgs: {
     pkg,
     name,
-    bindDirs,
-    roBindDirs,
+    bindPaths,
     envs,
     strace,
     extraArgs,
@@ -76,8 +95,7 @@ rec {
               else ""
             )
             + "${pkg}/bin/${name}";
-          bindDirs = bindDirs;
-          roBindDirs = roBindDirs;
+          bindPaths = bindPaths;
           envs = envs;
           extraArgs = extraArgs;
           shareUser = shareUser;
@@ -100,8 +118,7 @@ rec {
   wrapPackage = nixpkgs: {
     pkg,
     name ? pkg.pname,
-    extraBindDirs ? [],
-    extraRoBindDirs ? [],
+    extraBindPaths ? [],
     bindCwd ? false,
     envs ? {},
     extraDepPkgs ? [],
@@ -128,20 +145,30 @@ rec {
         then getDeps nixpkgs.strace
         else []
       );
-    bindDirs =
-      extraBindDirs
+    bindPaths = nixpkgs.lib.lists.unique (
+      pkgDeps
+      ++ extraBindPaths
       ++ (
         if bindCwd == true
-        then ["$(pwd)"]
+        then [
+          {
+            mode = "rw";
+            path = "$(pwd)";
+          }
+        ]
         else []
-      );
-    roBindDirs = nixpkgs.lib.lists.unique (pkgDeps
-      ++ extraRoBindDirs
+      )
       ++ (
         if bindCwd == "ro"
-        then ["$(pwd)"]
+        then [
+          {
+            mode = "ro";
+            path = "$(pwd)";
+          }
+        ]
         else []
-      ));
+      )
+    );
     mergedEnvs =
       {
         PATH = builtins.concatStringsSep ":" (["$PATH" (getBinDir pkg)] ++ (builtins.map getBinDir extraDepPkgs));
@@ -151,8 +178,7 @@ rec {
     generateWrapperScript nixpkgs {
       pkg = pkg;
       name = name;
-      bindDirs = bindDirs;
-      roBindDirs = roBindDirs;
+      bindPaths = bindPaths;
       envs = mergedEnvs;
       strace = strace;
       extraArgs = extraArgs;

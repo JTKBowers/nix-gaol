@@ -30,7 +30,7 @@
           pkg = pkgs.hello-wayland;
           name = "hello-wayland";
           envs = {XDG_RUNTIME_DIR = "$XDG_RUNTIME_DIR";};
-          extraRoBindDirs = ["$XDG_RUNTIME_DIR/wayland-0"];
+          extraBindPaths = ["$XDG_RUNTIME_DIR/wayland-0"];
           extraArgs = ["--dev /dev" "--dev-bind /dev/dri /dev/dri" "--proc /proc"];
         };
       };

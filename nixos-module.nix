@@ -43,14 +43,9 @@ with lib; let
         description = "Whether to call the wrapped program using strace to log its syscalls";
         default = false;
       };
-      extraBindDirs = mkOption {
+      extraBindPaths = mkOption {
         type = types.listOf types.str;
-        description = "Extra directories to bind into the sandbox";
-        default = [];
-      };
-      extraRoBindDirs = mkOption {
-        type = types.listOf types.str;
-        description = "Extra directories to ro-bind into the sandbox";
+        description = "Extra paths to bind into the sandbox";
         default = [];
       };
       shareUser = mkOption {
