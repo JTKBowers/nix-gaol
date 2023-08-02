@@ -119,9 +119,9 @@ with lib; let
         default = true;
       };
       presets = mkOption {
-        type = types.list types.enum ["ssl"];
+        type = types.listOf (types.enum ["ssl"]);
         description = "Presets for common functionality";
-        default = false;
+        default = [];
       };
     };
   };
