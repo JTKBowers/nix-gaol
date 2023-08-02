@@ -36,7 +36,23 @@
           name = "hello-wayland";
           envs = {XDG_RUNTIME_DIR = "$XDG_RUNTIME_DIR";};
           extraBindPaths = ["$XDG_RUNTIME_DIR/wayland-0"];
-          extraArgs = ["--dev /dev" "--dev-bind /dev/dri /dev/dri" "--proc /proc"];
+          extraArgs = [
+            "--dev /dev"
+            "--proc /proc"
+          ];
+        };
+
+        eglinfo-bwrapped = wrapPackage {
+          pkg = pkgs.glxinfo;
+          name = "eglinfo";
+          runtimeStorePaths = [
+            "/run/opengl-driver"
+          ];
+          extraArgs = [
+            "--dev /dev"
+            "--dev-bind /dev/dri /dev/dri"
+            "--proc /proc"
+          ];
         };
       };
     })

@@ -35,6 +35,7 @@ rec {
     bwrapPkg,
     execPath,
     bindPaths,
+    runtimeStorePaths,
     envs,
     extraArgs,
     shareUser,
@@ -55,6 +56,7 @@ rec {
     (buildOptionalArg clearEnv "--clearenv")
     (generateEnvArgs envs)
     (map bindPath bindPaths)
+    (buildOptionalArg (builtins.length runtimeStorePaths > 0) "$(nix-store --query --requisites ${builtins.concatStringsSep " " runtimeStorePaths} | sed \"s/\\(.*\\)/--ro-bind \\1 \\1/\")")
     (builtins.toString extraArgs)
     execPath
     "\"$@\""
@@ -76,6 +78,7 @@ rec {
     shareUts,
     shareCgroup,
     clearEnv,
+    runtimeStorePaths,
   }:
     pkgs.stdenvNoCC.mkDerivation {
       inherit name;
@@ -105,6 +108,7 @@ rec {
           shareNet = shareNet;
           shareCgroup = shareCgroup;
           clearEnv = clearEnv;
+          runtimeStorePaths = runtimeStorePaths;
         }}' >> "$out/bin/${name}"
         chmod 0755 "$out/bin/${name}"
 
@@ -119,6 +123,7 @@ rec {
     pkg,
     name ? pkg.pname,
     extraBindPaths ? [],
+    runtimeStorePaths ? [],
     bindCwd ? false,
     envs ? {},
     extraDepPkgs ? [],
@@ -154,6 +159,7 @@ rec {
     bindPaths = nixpkgs.lib.lists.unique (
       pkgDeps
       ++ extraBindPaths
+      ++ runtimeStorePaths
       ++ (
         if bindCwd == true
         then [
@@ -210,5 +216,6 @@ rec {
       shareNet = shareNet;
       shareCgroup = shareCgroup;
       clearEnv = clearEnv;
+      runtimeStorePaths = runtimeStorePaths;
     };
 }
