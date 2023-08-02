@@ -48,6 +48,11 @@ with lib; let
         description = "Extra paths to bind into the sandbox";
         default = [];
       };
+      runtimeStorePaths = mkOption {
+        type = types.listOf types.str;
+        description = "Links to the nix store that aren't present at build time. Intended for things like /run/opengl-driver.";
+        default = [];
+      };
       shareUser = mkOption {
         type = types.bool;
         description = "Whether to share the user. If false (the default) it will create a new user namespace";
