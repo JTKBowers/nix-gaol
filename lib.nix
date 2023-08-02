@@ -142,6 +142,22 @@ rec {
     getDeps = deps nixpkgs;
     getBinDir = pkg: "${pkg}/bin";
 
+    runtimeStorePaths' =
+      runtimeStorePaths
+      ++ (
+        if builtins.elem "graphics" presets
+        then ["/run/opengl-driver"]
+        else []
+      );
+
+    extraArgs' =
+      (
+        if builtins.elem "graphics" presets
+        then ["--dev /dev" "--dev-bind /dev/dri /dev/dri"]
+        else []
+      )
+      ++ extraArgs;
+
     # Build the nix-specific things into generic bwrap args
     pkgDeps =
       (getDeps pkg)
@@ -159,7 +175,7 @@ rec {
     bindPaths = nixpkgs.lib.lists.unique (
       pkgDeps
       ++ extraBindPaths
-      ++ runtimeStorePaths
+      ++ runtimeStorePaths'
       ++ (
         if bindCwd == true
         then [
@@ -221,7 +237,7 @@ rec {
       bindPaths = bindPaths;
       envs = mergedEnvs;
       strace = strace;
-      extraArgs = extraArgs;
+      extraArgs = extraArgs';
       shareUser = shareUser;
       shareIpc = shareIpc;
       sharePid = sharePid;
@@ -229,6 +245,6 @@ rec {
       shareNet = shareNet;
       shareCgroup = shareCgroup;
       clearEnv = clearEnv;
-      runtimeStorePaths = runtimeStorePaths;
+      runtimeStorePaths = runtimeStorePaths';
     };
 }

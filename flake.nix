@@ -44,13 +44,8 @@
         eglinfo-bwrapped = wrapPackage {
           pkg = pkgs.glxinfo;
           name = "eglinfo";
-          presets = ["wayland"];
-          runtimeStorePaths = [
-            "/run/opengl-driver"
-          ];
+          presets = ["graphics" "wayland"];
           extraArgs = [
-            "--dev /dev"
-            "--dev-bind /dev/dri /dev/dri"
             "--proc /proc"
           ];
         };
