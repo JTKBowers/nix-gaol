@@ -7,6 +7,36 @@
 with lib; let
   cfg = config;
   wrapPackage = (import ./lib.nix).wrapPackage pkgs;
+  samePathBindOption = {
+    options = {
+      mode = mkOption {
+        type = types.enum ["ro" "rw"];
+        description = "Whether to mount this path as read-only (the default) or read-write.";
+        default = "ro";
+      };
+      path = mkOption {
+        type = types.str;
+        description = "The source and destination path to mount";
+      };
+    };
+  };
+  diffPathBindOption = {
+    options = {
+      mode = mkOption {
+        type = types.enum ["ro" "rw"];
+        description = "Whether to mount this path as read-only (the default) or read-write.";
+        default = "ro";
+      };
+      srcPath = mkOption {
+        type = types.str;
+        description = "The path outside the sandbox to mount inside the sandbox. Required if path is not set";
+      };
+      dstPath = mkOption {
+        type = types.str;
+        description = "The path inside the sandbox. Required if path is not set";
+      };
+    };
+  };
   pkgOptions = {
     options = {
       pkg = mkOption {
@@ -44,7 +74,7 @@ with lib; let
         default = false;
       };
       extraBindPaths = mkOption {
-        type = types.listOf types.str;
+        type = types.listOf (types.oneOf [types.str (types.submodule samePathBindOption) (types.subModule diffPathBindOption)]);
         description = "Extra paths to bind into the sandbox";
         default = [];
       };
