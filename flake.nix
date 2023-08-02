@@ -34,8 +34,7 @@
         hello-wayland-bwrapped = wrapPackage {
           pkg = pkgs.hello-wayland;
           name = "hello-wayland";
-          envs = {XDG_RUNTIME_DIR = "$XDG_RUNTIME_DIR";};
-          extraBindPaths = ["$XDG_RUNTIME_DIR/wayland-0"];
+          presets = ["wayland"];
           extraArgs = [
             "--dev /dev"
             "--proc /proc"
@@ -45,6 +44,7 @@
         eglinfo-bwrapped = wrapPackage {
           pkg = pkgs.glxinfo;
           name = "eglinfo";
+          presets = ["wayland"];
           runtimeStorePaths = [
             "/run/opengl-driver"
           ];

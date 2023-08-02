@@ -195,12 +195,25 @@ rec {
         ]
         else []
       )
+      ++ (
+        if builtins.elem "wayland" presets
+        then ["$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY"]
+        else []
+      )
     );
     mergedEnvs =
       {
         PATH = builtins.concatStringsSep ":" (["$PATH" (getBinDir pkg)] ++ (builtins.map getBinDir extraDepPkgs));
       }
-      // envs;
+      // envs
+      // (
+        if builtins.elem "wayland" presets
+        then {
+          XDG_RUNTIME_DIR = "$XDG_RUNTIME_DIR";
+          WAYLAND_DISPLAY = "$WAYLAND_DISPLAY";
+        }
+        else {}
+      );
   in
     generateWrapperScript nixpkgs {
       pkg = pkg;
