@@ -79,7 +79,29 @@ rec {
     shareCgroup,
     clearEnv,
     runtimeStorePaths,
-  }:
+  }: let
+    bwrapCommand = buildBwrapCommand pkgs.lib.lists.flatten {
+      bwrapPkg = pkgs.bubblewrap;
+      execPath =
+        (
+          if strace
+          then "${pkgs.strace}/bin/strace -f"
+          else ""
+        )
+        + "${pkg}/bin/${name}";
+      bindPaths = bindPaths;
+      envs = envs;
+      extraArgs = extraArgs;
+      shareUser = shareUser;
+      shareIpc = shareIpc;
+      sharePid = sharePid;
+      shareUts = shareUts;
+      shareNet = shareNet;
+      shareCgroup = shareCgroup;
+      clearEnv = clearEnv;
+      runtimeStorePaths = runtimeStorePaths;
+    };
+  in
     pkgs.stdenvNoCC.mkDerivation {
       inherit name;
 
@@ -89,27 +111,7 @@ rec {
         mkdir -p "$out/bin"
         echo "#! ${pkgs.stdenv.shell}" >> "$out/bin/${name}"
         echo "set -e" >> "$out/bin/${name}"
-        echo 'exec ${buildBwrapCommand pkgs.lib.lists.flatten {
-          bwrapPkg = pkgs.bubblewrap;
-          execPath =
-            (
-              if strace
-              then "${pkgs.strace}/bin/strace -f"
-              else ""
-            )
-            + "${pkg}/bin/${name}";
-          bindPaths = bindPaths;
-          envs = envs;
-          extraArgs = extraArgs;
-          shareUser = shareUser;
-          shareIpc = shareIpc;
-          sharePid = sharePid;
-          shareUts = shareUts;
-          shareNet = shareNet;
-          shareCgroup = shareCgroup;
-          clearEnv = clearEnv;
-          runtimeStorePaths = runtimeStorePaths;
-        }}' >> "$out/bin/${name}"
+        echo 'exec ${bwrapCommand}' >> "$out/bin/${name}"
         chmod 0755 "$out/bin/${name}"
 
         if [ -d "${pkg}/share" ]; then
