@@ -101,6 +101,28 @@ rec {
       clearEnv = clearEnv;
       runtimeStorePaths = runtimeStorePaths;
     };
+    busPath = "$XDG_RUNTIME_DIR/dbus-proxy";
+    dbusProxy = wrapPackage pkgs {
+      pkg = pkgs.xdg-dbus-proxy;
+      name = "xdg-dbus-proxy";
+      envs = {
+        XDG_RUNTIME_DIR = "$XDG_RUNTIME_DIR";
+      };
+      extraBindPaths = [
+        "/run/user/1000/bus"
+        {
+          mode = "rw";
+          path = busPath;
+        }
+      ];
+    };
+    dbusProxyRunner = pkgs.lib.strings.optionalString (name != "xdg-dbus-proxy") ''
+      # echo 'echo $$' >> "$out/bin/${name}"
+      echo 'mkdir -p ${busPath}' >> "$out/bin/${name}"
+      echo '${dbusProxy}/bin/xdg-dbus-proxy unix:path=/run/user/1000/bus ${busPath}/bus --log &' >> "$out/bin/${name}"
+      echo 'bg_pid=$!' >> "$out/bin/${name}"
+      echo "trap \"trap - SIGTERM && kill \$bg_pid\" SIGINT SIGTERM EXIT" >> "$out/bin/${name}"
+    '';
   in
     pkgs.stdenvNoCC.mkDerivation {
       inherit name;
@@ -111,7 +133,8 @@ rec {
         mkdir -p "$out/bin"
         echo "#! ${pkgs.stdenv.shell}" >> "$out/bin/${name}"
         echo "set -e" >> "$out/bin/${name}"
-        echo 'exec ${bwrapCommand}' >> "$out/bin/${name}"
+        ${dbusProxyRunner}
+        echo '${bwrapCommand}' >> "$out/bin/${name}"
         chmod 0755 "$out/bin/${name}"
 
         if [ -d "${pkg}/share" ]; then
