@@ -44,12 +44,7 @@
         dbus-monitor = wrapPackage {
           pkg = pkgs.dbus;
           name = "dbus-monitor";
-          extraBindPaths = [
-            "$XDG_RUNTIME_DIR/dbus-proxy/bus"
-          ];
-          envs = {
-            DBUS_SESSION_BUS_ADDRESS = "unix:path=/run/user/1000/dbus-proxy/bus";
-          };
+          dbus.enable = true;
         };
 
         eglinfo-bwrapped = wrapPackage {

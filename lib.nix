@@ -79,6 +79,7 @@ rec {
     shareCgroup,
     clearEnv,
     runtimeStorePaths,
+    dbus,
   }: let
     bwrapCommand = buildBwrapCommand pkgs.lib.lists.flatten {
       bwrapPkg = pkgs.bubblewrap;
@@ -101,7 +102,7 @@ rec {
       clearEnv = clearEnv;
       runtimeStorePaths = runtimeStorePaths;
     };
-    busPath = "$XDG_RUNTIME_DIR/dbus-proxy";
+    busPath = "$(dirname ${dbus.proxyBusPath})";
     dbusProxy = wrapPackage pkgs {
       pkg = pkgs.xdg-dbus-proxy;
       name = "xdg-dbus-proxy";
@@ -109,17 +110,17 @@ rec {
         XDG_RUNTIME_DIR = "$XDG_RUNTIME_DIR";
       };
       extraBindPaths = [
-        "/run/user/1000/bus"
+        dbus.parentBusPath
         {
           mode = "rw";
           path = busPath;
         }
       ];
     };
-    dbusProxyRunner = pkgs.lib.strings.optionalString (name != "xdg-dbus-proxy") ''
+    dbusProxyRunner = pkgs.lib.strings.optionalString dbus.enable ''
       # echo 'echo $$' >> "$out/bin/${name}"
       echo 'mkdir -p ${busPath}' >> "$out/bin/${name}"
-      echo '${dbusProxy}/bin/xdg-dbus-proxy unix:path=/run/user/1000/bus ${busPath}/bus --log &' >> "$out/bin/${name}"
+      echo '${dbusProxy}/bin/xdg-dbus-proxy unix:path=${dbus.parentBusPath} ${dbus.proxyBusPath} --log &' >> "$out/bin/${name}"
       echo 'bg_pid=$!' >> "$out/bin/${name}"
       echo "trap \"trap - SIGTERM && kill \$bg_pid\" SIGINT SIGTERM EXIT" >> "$out/bin/${name}"
     '';
@@ -162,10 +163,20 @@ rec {
     shareCgroup ? false,
     clearEnv ? true,
     presets ? [],
+    dbus ? {
+      enable = false;
+    },
   }: let
     # Some scoped helper functions
     getDeps = deps nixpkgs;
     getBinDir = pkg: "${pkg}/bin";
+
+    dbus' = {
+      enable = dbus.enable or false;
+
+      parentBusPath = dbus.parentBusPath or "$XDG_RUNTIME_DIR/bus";
+      proxyBusPath = dbus.proxyBusPath or "$XDG_RUNTIME_DIR/dbus-proxy/bus";
+    };
 
     runtimeStorePaths' =
       runtimeStorePaths
@@ -241,6 +252,11 @@ rec {
         then ["$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY"]
         else []
       )
+      ++ (
+        if dbus'.enable
+        then [dbus'.proxyBusPath]
+        else []
+      )
     );
     mergedEnvs =
       {
@@ -253,6 +269,11 @@ rec {
           XDG_RUNTIME_DIR = "$XDG_RUNTIME_DIR";
           WAYLAND_DISPLAY = "$WAYLAND_DISPLAY";
         }
+        else {}
+      )
+      // (
+        if dbus'.enable
+        then {DBUS_SESSION_BUS_ADDRESS = "unix:path=${dbus'.proxyBusPath}";}
         else {}
       );
   in
@@ -271,5 +292,6 @@ rec {
       shareCgroup = shareCgroup;
       clearEnv = clearEnv;
       runtimeStorePaths = runtimeStorePaths';
+      dbus = dbus';
     };
 }
