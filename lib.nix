@@ -210,6 +210,7 @@ rec {
             srcPath = "${nixpkgs.cacert.p11kit}/etc/ssl/trust-source";
             dstPath = "/etc/ssl/trust-source";
           }
+          "/etc/resolv.conf"
         ]
         else []
       )
