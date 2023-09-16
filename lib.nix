@@ -118,9 +118,8 @@ rec {
       ];
     };
     dbusProxyRunner = pkgs.lib.strings.optionalString dbus.enable ''
-      # echo 'echo $$' >> "$out/bin/${name}"
       echo 'mkdir -p ${busPath}' >> "$out/bin/${name}"
-      echo '${dbusProxy}/bin/xdg-dbus-proxy unix:path=${dbus.parentBusPath} ${dbus.proxyBusPath} --log &' >> "$out/bin/${name}"
+      echo '${dbusProxy}/bin/xdg-dbus-proxy unix:path=${dbus.parentBusPath} ${dbus.proxyBusPath} --filter &' >> "$out/bin/${name}"
       echo 'bg_pid=$!' >> "$out/bin/${name}"
       echo "trap \"trap - SIGTERM && kill \$bg_pid\" SIGINT SIGTERM EXIT" >> "$out/bin/${name}"
       # Wait for the bus to exist before proceeding
