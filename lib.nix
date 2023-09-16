@@ -123,6 +123,8 @@ rec {
       echo '${dbusProxy}/bin/xdg-dbus-proxy unix:path=${dbus.parentBusPath} ${dbus.proxyBusPath} --log &' >> "$out/bin/${name}"
       echo 'bg_pid=$!' >> "$out/bin/${name}"
       echo "trap \"trap - SIGTERM && kill \$bg_pid\" SIGINT SIGTERM EXIT" >> "$out/bin/${name}"
+      # Wait for the bus to exist before proceeding
+      echo 'for _ in {1..10000}; do if [[ -e "${dbus.proxyBusPath}" ]]; then break; fi; done' >> "$out/bin/${name}"
     '';
   in
     pkgs.stdenvNoCC.mkDerivation {
