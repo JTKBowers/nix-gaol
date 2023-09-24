@@ -140,9 +140,25 @@ rec {
         chmod 0755 "$out/bin/${name}"
 
         if [ -d "${pkg}/share" ]; then
-          cp -r "${pkg}/share" "$out/share"
-          ! grep "${pkg}/bin" -r "$out/share/"
-          exit $?
+          cp -a "${pkg}/share" "$out/share"
+
+          # Replace any direct references to the binary
+          find "$out/share" -type f | while read file;
+          do
+            if grep -q "${pkg}/bin" "$file"
+            then
+              substituteInPlace "$file" \
+                --replace "${pkg}/bin/${name}" "$out/bin/${name}";
+            fi
+          done
+
+
+          ! grep -q "${pkg}/bin" -r "$out/share/"
+          hasDirectReference=$?
+          if [[ $hasDirectReference -ne 0 ]]; then
+            echo "Found direct reference to unsandboxed binary in desktop item"
+            exit 1
+          fi
         fi
       '';
     };
