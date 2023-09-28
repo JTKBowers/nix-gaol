@@ -201,6 +201,11 @@ rec {
         if builtins.elem "graphics" presets
         then ["/run/opengl-driver"]
         else []
+      )
+      ++ (
+        if builtins.elem "cursor" presets
+        then ["/run/current-system/sw/share/icons/Adwaita"]
+        else []
       );
 
     extraArgs' =
@@ -286,6 +291,13 @@ rec {
         then {
           XDG_RUNTIME_DIR = "$XDG_RUNTIME_DIR";
           WAYLAND_DISPLAY = "$WAYLAND_DISPLAY";
+        }
+        else {}
+      )
+      // (
+        if builtins.elem "cursor" presets
+        then {
+          XCURSOR_PATH = "/run/current-system/sw/share/icons";
         }
         else {}
       )

@@ -119,7 +119,7 @@ with lib; let
         default = true;
       };
       presets = mkOption {
-        type = types.listOf (types.enum ["ssl" "wayland" "graphics"]);
+        type = types.listOf (types.enum ["ssl" "wayland" "graphics" "cursor"]);
         description = "Presets for common functionality";
         default = [];
       };
