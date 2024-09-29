@@ -197,23 +197,11 @@
 
     runtimeStorePaths' =
       runtimeStorePaths
-      ++ (
-        if builtins.elem "graphics" presets
-        then ["/run/opengl-driver"]
-        else []
-      )
-      ++ (
-        if builtins.elem "cursor" presets
-        then ["/run/current-system/sw/share/icons/Adwaita"]
-        else []
-      );
+      ++ pkgs.lib.lists.optional (builtins.elem "graphics" presets) "/run/opengl-driver"
+      ++ pkgs.lib.lists.optional (builtins.elem "cursor" presets) "/run/current-system/sw/share/icons/Adwaita";
 
     extraArgs' =
-      (
-        if builtins.elem "graphics" presets
-        then ["--dev /dev" "--dev-bind /dev/dri /dev/dri"]
-        else []
-      )
+      pkgs.lib.lists.optionals (builtins.elem "graphics" presets) ["--dev /dev" "--dev-bind /dev/dri /dev/dri"]
       ++ extraArgs;
 
     # Build the nix-specific things into generic bwrap args
@@ -227,52 +215,28 @@
       pkgDeps
       ++ extraBindPaths
       ++ runtimeStorePaths'
-      ++ (
-        if bindCwd == true
-        then [
-          {
-            mode = "rw";
-            path = "$(pwd)";
-          }
-        ]
-        else []
-      )
-      ++ (
-        if bindCwd == "ro"
-        then [
-          {
-            mode = "ro";
-            path = "$(pwd)";
-          }
-        ]
-        else []
-      )
-      ++ (
-        if builtins.elem "ssl" presets
-        then [
-          # See https://github.com/NixOS/pkgs/blob/af11c51c47abb23e6730b34790fd47dc077b9eda/nixos/modules/security/ca.nix#L80
-          {
-            srcPath = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
-            dstPath = "/etc/ssl/certs/ca-certificates.crt";
-          }
-          {
-            srcPath = "${pkgs.cacert.p11kit}/etc/ssl/trust-source";
-            dstPath = "/etc/ssl/trust-source";
-          }
-          "/etc/resolv.conf"
-        ]
-        else []
-      )
-      ++ (
-        if builtins.elem "wayland" presets
-        then ["$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY"]
-        else []
-      )
-      ++ (
-        if dbus'.enable
-        then [dbus'.proxyBusPath]
-        else []
-      )
+      ++ pkgs.lib.lists.optional (bindCwd == true) {
+        mode = "rw";
+        path = "$(pwd)";
+      }
+      ++ pkgs.lib.lists.optional (bindCwd == "ro") {
+        mode = "ro";
+        path = "$(pwd)";
+      }
+      ++ pkgs.lib.lists.optionals (builtins.elem "ssl" presets) [
+        # See https://github.com/NixOS/pkgs/blob/af11c51c47abb23e6730b34790fd47dc077b9eda/nixos/modules/security/ca.nix#L80
+        {
+          srcPath = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+          dstPath = "/etc/ssl/certs/ca-certificates.crt";
+        }
+        {
+          srcPath = "${pkgs.cacert.p11kit}/etc/ssl/trust-source";
+          dstPath = "/etc/ssl/trust-source";
+        }
+        "/etc/resolv.conf"
+      ]
+      ++ pkgs.lib.lists.optional (builtins.elem "wayland" presets) ["$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY"]
+      ++ pkgs.lib.lists.optional dbus'.enable dbus'.proxyBusPath
     );
     mergedEnvs =
       {
