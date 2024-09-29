@@ -1,5 +1,5 @@
-rec {
-  deps = nixpkgs: pkg: nixpkgs.lib.strings.splitString "\n" (nixpkgs.lib.strings.fileContents (nixpkgs.writeReferencesToFile pkg));
+{pkgs, ...}: rec {
+  getDeps = pkg: pkgs.lib.strings.splitString "\n" (pkgs.lib.strings.fileContents (pkgs.writeReferencesToFile pkg));
 
   bindPath' = {
     srcPath,
@@ -64,7 +64,7 @@ rec {
 
   setEnv = name: value: "--setenv ${name} ${value}";
   generateEnvArgs = envs: builtins.map (name: (setEnv name (builtins.getAttr name envs))) (builtins.attrNames envs);
-  generateWrapperScript = pkgs: {
+  generateWrapperScript = {
     pkg,
     name,
     bindPaths,
@@ -103,7 +103,7 @@ rec {
       runtimeStorePaths = runtimeStorePaths;
     };
     busPath = "$(dirname ${dbus.proxyBusPath})";
-    dbusProxy = wrapPackage pkgs {
+    dbusProxy = wrapPackage {
       pkg = pkgs.xdg-dbus-proxy;
       name = "xdg-dbus-proxy";
       envs = {
@@ -162,7 +162,7 @@ rec {
         fi
       '';
     };
-  wrapPackage = nixpkgs: {
+  wrapPackage = {
     pkg,
     name ? pkg.pname,
     extraBindPaths ? [],
@@ -185,7 +185,6 @@ rec {
     },
   }: let
     # Some scoped helper functions
-    getDeps = deps nixpkgs;
     getBinDir = pkg: "${pkg}/bin";
 
     dbus' = {
@@ -222,15 +221,15 @@ rec {
       ++ (builtins.concatMap getDeps extraDepPkgs)
       ++ (
         if strace
-        then getDeps nixpkgs.strace
+        then getDeps pkgs.strace
         else []
       )
       ++ (
         if builtins.elem "ssl" presets
-        then getDeps nixpkgs.cacert
+        then getDeps pkgs.cacert
         else []
       );
-    bindPaths = nixpkgs.lib.lists.unique (
+    bindPaths = pkgs.lib.lists.unique (
       pkgDeps
       ++ extraBindPaths
       ++ runtimeStorePaths'
@@ -257,13 +256,13 @@ rec {
       ++ (
         if builtins.elem "ssl" presets
         then [
-          # See https://github.com/NixOS/nixpkgs/blob/af11c51c47abb23e6730b34790fd47dc077b9eda/nixos/modules/security/ca.nix#L80
+          # See https://github.com/NixOS/pkgs/blob/af11c51c47abb23e6730b34790fd47dc077b9eda/nixos/modules/security/ca.nix#L80
           {
-            srcPath = "${nixpkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+            srcPath = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
             dstPath = "/etc/ssl/certs/ca-certificates.crt";
           }
           {
-            srcPath = "${nixpkgs.cacert.p11kit}/etc/ssl/trust-source";
+            srcPath = "${pkgs.cacert.p11kit}/etc/ssl/trust-source";
             dstPath = "/etc/ssl/trust-source";
           }
           "/etc/resolv.conf"
@@ -307,7 +306,7 @@ rec {
         else {}
       );
   in
-    generateWrapperScript nixpkgs {
+    generateWrapperScript {
       pkg = pkg;
       name = name;
       bindPaths = bindPaths;
