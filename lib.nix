@@ -1,5 +1,6 @@
 {pkgs, ...}: rec {
   getDeps = pkg: pkgs.lib.strings.splitString "\n" (pkgs.lib.strings.fileContents (pkgs.writeReferencesToFile pkg));
+  getDepsMulti = packages: pkgs.lib.lists.unique (builtins.concatMap getDeps packages);
 
   bindPath' = {
     srcPath,
@@ -216,19 +217,11 @@
       ++ extraArgs;
 
     # Build the nix-specific things into generic bwrap args
-    pkgDeps =
-      (getDeps pkg)
-      ++ (builtins.concatMap getDeps extraDepPkgs)
-      ++ (
-        if strace
-        then getDeps pkgs.strace
-        else []
-      )
-      ++ (
-        if builtins.elem "ssl" presets
-        then getDeps pkgs.cacert
-        else []
-      );
+    pkgDeps = getDepsMulti (
+      [pkg extraDepPkgs]
+      ++ pkgs.lib.lists.optional strace pkgs.strace
+      ++ pkgs.lib.lists.optional (builtins.elem "ssl" presets) pkgs.cacert
+    );
     bindPaths = pkgs.lib.lists.unique (
       pkgDeps
       ++ extraBindPaths
