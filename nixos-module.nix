@@ -6,7 +6,7 @@
 }:
 with lib; let
   cfg = config;
-  wrapPackage = (import ./lib.nix).wrapPackage pkgs;
+  wrapPackage = (pkgs.callPackage ./lib.nix {}).wrapPackage;
   samePathBindOption = {
     options = {
       mode = mkOption {

@@ -11,9 +11,10 @@
         pkgs = import nixpkgs {
           inherit system;
         };
-        wrapPackage =
-          (import ./lib.nix).wrapPackage pkgs;
+        lib = pkgs.callPackage ./lib.nix {};
+        wrapPackage = lib.wrapPackage;
       in {
+        inherit wrapPackage;
         hello-bwrapped = wrapPackage {pkg = pkgs.hello;};
         curl-bwrapped = wrapPackage {
           pkg = pkgs.curl;
@@ -58,7 +59,6 @@
       };
     })
     // {
-      lib = {wrapPackage = (import ./lib.nix).wrapPackage;};
       nixosModule = import ./nixos-module.nix;
     };
 }
