@@ -243,26 +243,16 @@
         PATH = builtins.concatStringsSep ":" (["$PATH" (getBinDir pkg)] ++ (builtins.map getBinDir extraDepPkgs));
       }
       // envs
-      // (
-        if builtins.elem "wayland" presets
-        then {
-          XDG_RUNTIME_DIR = "$XDG_RUNTIME_DIR";
-          WAYLAND_DISPLAY = "$WAYLAND_DISPLAY";
-        }
-        else {}
-      )
-      // (
-        if builtins.elem "cursor" presets
-        then {
-          XCURSOR_PATH = "/run/current-system/sw/share/icons";
-        }
-        else {}
-      )
-      // (
-        if dbus'.enable
-        then {DBUS_SESSION_BUS_ADDRESS = "unix:path=${dbus'.proxyBusPath}";}
-        else {}
-      );
+      // pkgs.lib.attrsets.optionalAttrs (builtins.elem "wayland" presets) {
+        XDG_RUNTIME_DIR = "$XDG_RUNTIME_DIR";
+        WAYLAND_DISPLAY = "$WAYLAND_DISPLAY";
+      }
+      // pkgs.lib.attrsets.optionalAttrs (builtins.elem "cursor" presets) {
+        XCURSOR_PATH = "/run/current-system/sw/share/icons";
+      }
+      // pkgs.lib.attrsets.optionalAttrs dbus'.enable {
+        DBUS_SESSION_BUS_ADDRESS = "unix:path=${dbus'.proxyBusPath}";
+      };
   in
     generateWrapperScript {
       pkg = pkg;
