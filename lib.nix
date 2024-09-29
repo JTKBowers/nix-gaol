@@ -1,6 +1,10 @@
-{pkgs, ...}: rec {
-  getDeps = pkg: pkgs.lib.strings.splitString "\n" (pkgs.lib.strings.fileContents (pkgs.writeReferencesToFile pkg));
-  getDepsMulti = packages: pkgs.lib.lists.unique (builtins.concatMap getDeps packages);
+{
+  pkgs,
+  lib,
+  ...
+}: rec {
+  getDeps = pkg: lib.strings.splitString "\n" (lib.strings.fileContents (pkgs.writeReferencesToFile pkg));
+  getDepsMulti = packages: lib.lists.unique (builtins.concatMap getDeps packages);
 
   bindPath' = {
     srcPath,
@@ -82,7 +86,7 @@
     runtimeStorePaths,
     dbus,
   }: let
-    bwrapCommand = buildBwrapCommand pkgs.lib.lists.flatten {
+    bwrapCommand = buildBwrapCommand lib.lists.flatten {
       bwrapPkg = pkgs.bubblewrap;
       execPath =
         (
@@ -118,7 +122,7 @@
         }
       ];
     };
-    dbusProxyRunner = pkgs.lib.strings.optionalString dbus.enable ''
+    dbusProxyRunner = lib.strings.optionalString dbus.enable ''
       echo 'mkdir -p ${busPath}' >> "$out/bin/${name}"
       echo '${dbusProxy}/bin/xdg-dbus-proxy unix:path=${dbus.parentBusPath} ${dbus.proxyBusPath} --filter &' >> "$out/bin/${name}"
       echo 'bg_pid=$!' >> "$out/bin/${name}"
@@ -197,33 +201,33 @@
 
     runtimeStorePaths' =
       runtimeStorePaths
-      ++ pkgs.lib.lists.optional (builtins.elem "graphics" presets) "/run/opengl-driver"
-      ++ pkgs.lib.lists.optional (builtins.elem "cursor" presets) "/run/current-system/sw/share/icons/Adwaita";
+      ++ lib.lists.optional (builtins.elem "graphics" presets) "/run/opengl-driver"
+      ++ lib.lists.optional (builtins.elem "cursor" presets) "/run/current-system/sw/share/icons/Adwaita";
 
     extraArgs' =
-      pkgs.lib.lists.optionals (builtins.elem "graphics" presets) ["--dev /dev" "--dev-bind /dev/dri /dev/dri"]
+      lib.lists.optionals (builtins.elem "graphics" presets) ["--dev /dev" "--dev-bind /dev/dri /dev/dri"]
       ++ extraArgs;
 
     # Build the nix-specific things into generic bwrap args
     pkgDeps = getDepsMulti (
       [pkg]
       ++ extraDepPkgs
-      ++ pkgs.lib.lists.optional strace pkgs.strace
-      ++ pkgs.lib.lists.optional (builtins.elem "ssl" presets) pkgs.cacert
+      ++ lib.lists.optional strace pkgs.strace
+      ++ lib.lists.optional (builtins.elem "ssl" presets) pkgs.cacert
     );
-    bindPaths = pkgs.lib.lists.unique (
+    bindPaths = lib.lists.unique (
       pkgDeps
       ++ extraBindPaths
       ++ runtimeStorePaths'
-      ++ pkgs.lib.lists.optional (bindCwd == true) {
+      ++ lib.lists.optional (bindCwd == true) {
         mode = "rw";
         path = "$(pwd)";
       }
-      ++ pkgs.lib.lists.optional (bindCwd == "ro") {
+      ++ lib.lists.optional (bindCwd == "ro") {
         mode = "ro";
         path = "$(pwd)";
       }
-      ++ pkgs.lib.lists.optionals (builtins.elem "ssl" presets) [
+      ++ lib.lists.optionals (builtins.elem "ssl" presets) [
         # See https://github.com/NixOS/pkgs/blob/af11c51c47abb23e6730b34790fd47dc077b9eda/nixos/modules/security/ca.nix#L80
         {
           srcPath = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
@@ -235,22 +239,22 @@
         }
         "/etc/resolv.conf"
       ]
-      ++ pkgs.lib.lists.optional (builtins.elem "wayland" presets) ["$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY"]
-      ++ pkgs.lib.lists.optional dbus'.enable dbus'.proxyBusPath
+      ++ lib.lists.optional (builtins.elem "wayland" presets) ["$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY"]
+      ++ lib.lists.optional dbus'.enable dbus'.proxyBusPath
     );
     mergedEnvs =
       {
         PATH = builtins.concatStringsSep ":" (["$PATH" (getBinDir pkg)] ++ (builtins.map getBinDir extraDepPkgs));
       }
       // envs
-      // pkgs.lib.attrsets.optionalAttrs (builtins.elem "wayland" presets) {
+      // lib.attrsets.optionalAttrs (builtins.elem "wayland" presets) {
         XDG_RUNTIME_DIR = "$XDG_RUNTIME_DIR";
         WAYLAND_DISPLAY = "$WAYLAND_DISPLAY";
       }
-      // pkgs.lib.attrsets.optionalAttrs (builtins.elem "cursor" presets) {
+      // lib.attrsets.optionalAttrs (builtins.elem "cursor" presets) {
         XCURSOR_PATH = "/run/current-system/sw/share/icons";
       }
-      // pkgs.lib.attrsets.optionalAttrs dbus'.enable {
+      // lib.attrsets.optionalAttrs dbus'.enable {
         DBUS_SESSION_BUS_ADDRESS = "unix:path=${dbus'.proxyBusPath}";
       };
   in
