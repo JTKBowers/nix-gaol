@@ -32,10 +32,6 @@
 
   buildCommand = entries: builtins.concatStringsSep " " entries;
 
-  buildOptionalArg = cond: value:
-    if cond
-    then value
-    else [];
   buildBwrapCommand = flatten: {
     bwrapPkg,
     execPath,
@@ -52,16 +48,16 @@
     clearEnv,
   }: (buildCommand (flatten [
     "${bwrapPkg}/bin/bwrap"
-    (buildOptionalArg (!shareUser) "--unshare-user")
-    (buildOptionalArg (!shareIpc) "--unshare-ipc")
-    (buildOptionalArg (!sharePid) "--unshare-pid")
-    (buildOptionalArg (!shareNet) "--unshare-net")
-    (buildOptionalArg (!shareUts) "--unshare-uts")
-    (buildOptionalArg (!shareCgroup) "--unshare-cgroup")
-    (buildOptionalArg clearEnv "--clearenv")
+    (lib.lists.optional (!shareUser) "--unshare-user")
+    (lib.lists.optional (!shareIpc) "--unshare-ipc")
+    (lib.lists.optional (!sharePid) "--unshare-pid")
+    (lib.lists.optional (!shareNet) "--unshare-net")
+    (lib.lists.optional (!shareUts) "--unshare-uts")
+    (lib.lists.optional (!shareCgroup) "--unshare-cgroup")
+    (lib.lists.optional clearEnv "--clearenv")
     (generateEnvArgs envs)
     (map bindPath bindPaths)
-    (buildOptionalArg (builtins.length runtimeStorePaths > 0) "$(nix-store --query --requisites ${builtins.concatStringsSep " " runtimeStorePaths} | sed \"s/\\(.*\\)/--ro-bind \\1 \\1/\")")
+    (lib.lists.optional (builtins.length runtimeStorePaths > 0) "$(nix-store --query --requisites ${builtins.concatStringsSep " " runtimeStorePaths} | sed \"s/\\(.*\\)/--ro-bind \\1 \\1/\")")
     (builtins.toString extraArgs)
     execPath
     "\"$@\""
