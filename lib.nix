@@ -1,6 +1,7 @@
 {
   pkgs,
   lib,
+  writeShellScriptBin,
   ...
 }: rec {
   getDeps = pkg: lib.strings.splitString "\n" (lib.strings.fileContents (pkgs.writeReferencesToFile pkg));
@@ -112,13 +113,15 @@
         }
       ];
     };
-    dbusProxyRunner = lib.strings.optionalString dbus.enable ''
-      echo 'mkdir -p ${busPath}' >> "$out/bin/${name}"
-      echo '${dbusProxy}/bin/xdg-dbus-proxy unix:path=${dbus.parentBusPath} ${dbus.proxyBusPath} --filter &' >> "$out/bin/${name}"
-      echo 'bg_pid=$!' >> "$out/bin/${name}"
-      echo "trap \"trap - SIGTERM && kill \$bg_pid\" SIGINT SIGTERM EXIT" >> "$out/bin/${name}"
+    dbusProxyRunner = writeShellScriptBin "dbus-proxy-runner" ''
+      mkdir -p ${busPath}
+      ${dbusProxy}/bin/xdg-dbus-proxy unix:path=${dbus.parentBusPath} ${dbus.proxyBusPath} --filter &
+      bg_pid=$!
+      trap \"trap - SIGTERM && kill \$bg_pid\" SIGINT SIGTERM EXIT
       # Wait for the bus to exist before proceeding
-      echo 'for _ in {1..10000}; do if [[ -e "${dbus.proxyBusPath}" ]]; then break; fi; done' >> "$out/bin/${name}"
+      for _ in {1..10000}; do
+        if [[ -e "${dbus.proxyBusPath}" ]]; then break; fi;
+      done
     '';
   in
     pkgs.stdenvNoCC.mkDerivation {
@@ -130,7 +133,7 @@
         mkdir -p "$out/bin"
         echo "#! ${pkgs.stdenv.shell}" >> "$out/bin/${name}"
         echo "set -e" >> "$out/bin/${name}"
-        ${dbusProxyRunner}
+        echo "${lib.strings.optionalString dbus.enable "${dbusProxyRunner}/bin/dbus-proxy-runner"}" >> "$out/bin/${name}"
         echo '${bwrapCommand}' >> "$out/bin/${name}"
         chmod 0755 "$out/bin/${name}"
 
