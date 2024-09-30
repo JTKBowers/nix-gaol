@@ -88,13 +88,7 @@
   }: let
     bwrapCommand = buildBwrapCommand lib.lists.flatten {
       bwrapPkg = pkgs.bubblewrap;
-      execPath =
-        (
-          if strace
-          then "${pkgs.strace}/bin/strace -f"
-          else ""
-        )
-        + "${pkg}/bin/${name}";
+      execPath = (lib.strings.optionalString strace "${pkgs.strace}/bin/strace -f") + "${pkg}/bin/${name}";
       bindPaths = bindPaths;
       envs = envs;
       extraArgs = extraArgs;
