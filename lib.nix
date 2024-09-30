@@ -32,7 +32,7 @@
 
   buildCommand = entries: builtins.concatStringsSep " " entries;
 
-  buildBwrapCommand = flatten: {
+  buildBwrapCommand = {
     bwrapPkg,
     execPath,
     bindPaths,
@@ -46,7 +46,7 @@
     shareUts,
     shareCgroup,
     clearEnv,
-  }: (buildCommand (flatten [
+  }: (buildCommand (lib.lists.flatten [
     "${bwrapPkg}/bin/bwrap"
     (lib.lists.optional (!shareUser) "--unshare-user")
     (lib.lists.optional (!shareIpc) "--unshare-ipc")
@@ -82,7 +82,7 @@
     runtimeStorePaths,
     dbus,
   }: let
-    bwrapCommand = buildBwrapCommand lib.lists.flatten {
+    bwrapCommand = buildBwrapCommand {
       bwrapPkg = pkgs.bubblewrap;
       execPath = (lib.strings.optionalString strace "${pkgs.strace}/bin/strace -f") + "${pkg}/bin/${name}";
       bindPaths = bindPaths;
