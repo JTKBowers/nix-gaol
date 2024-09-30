@@ -189,9 +189,6 @@
       enable = false;
     },
   }: let
-    # Some scoped helper functions
-    getBinDir = pkg: "${pkg}/bin";
-
     dbus' = {
       enable = dbus.enable or false;
 
@@ -244,7 +241,7 @@
     );
     mergedEnvs =
       {
-        PATH = builtins.concatStringsSep ":" (["$PATH" (getBinDir pkg)] ++ (builtins.map getBinDir extraDepPkgs));
+        PATH = "$PATH:${lib.strings.makeBinPath ([pkg] ++ extraDepPkgs)}";
       }
       // envs
       // lib.attrsets.optionalAttrs (builtins.elem "wayland" presets) {
