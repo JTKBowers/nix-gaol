@@ -218,7 +218,8 @@
 
     # Build the nix-specific things into generic bwrap args
     pkgDeps = getDepsMulti (
-      [pkg extraDepPkgs]
+      [pkg]
+      ++ extraDepPkgs
       ++ pkgs.lib.lists.optional strace pkgs.strace
       ++ pkgs.lib.lists.optional (builtins.elem "ssl" presets) pkgs.cacert
     );
