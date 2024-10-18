@@ -4,7 +4,7 @@
   writeShellScriptBin,
   ...
 }: rec {
-  getDeps = pkg: lib.strings.splitString "\n" (lib.strings.fileContents (pkgs.writeReferencesToFile pkg));
+  getDeps = pkg: lib.strings.splitString "\n" (lib.strings.fileContents (pkgs.writeClosure pkg));
   getDepsMulti = packages: lib.lists.unique (builtins.concatMap getDeps packages);
 
   bindPath' = {
