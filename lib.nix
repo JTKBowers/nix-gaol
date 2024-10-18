@@ -123,6 +123,11 @@
         if [[ -e "${dbus.proxyBusPath}" ]]; then break; fi;
       done
     '';
+    wrappedCommand = writeShellScriptBin "wrapped-${name}" ''
+      set -e
+      ${lib.strings.optionalString dbus.enable "${dbusProxyRunner}/bin/dbus-proxy-runner"}
+      ${bwrapCommand}
+    '';
   in
     pkgs.stdenvNoCC.mkDerivation {
       inherit name;
@@ -130,13 +135,9 @@
       phases = "installPhase";
 
       installPhase = ''
-        mkdir -p "$out/bin"
-        echo "#! ${pkgs.stdenv.shell}" >> "$out/bin/${name}"
-        echo "set -e" >> "$out/bin/${name}"
-        echo "${lib.strings.optionalString dbus.enable "${dbusProxyRunner}/bin/dbus-proxy-runner"}" >> "$out/bin/${name}"
-        echo '${bwrapCommand}' >> "$out/bin/${name}"
-        chmod 0755 "$out/bin/${name}"
-
+        mkdir -p $out
+        mkdir -p $out/bin
+        cp ${wrappedCommand}/bin/wrapped-${name} $out/bin/wrapped-${name}
         if [ -d "${pkg}/share" ]; then
           cp -a "${pkg}/share" "$out/share"
 
