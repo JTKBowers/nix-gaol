@@ -25,7 +25,7 @@
           pkg = pkgs.helix;
           name = "hx";
           bindCwd = true;
-          extraDepPkgs = [pkgs.rust-analyzer pkgs.rnix-lsp];
+          extraDepPkgs = [pkgs.rust-analyzer pkgs.nil];
           envs = {
             HOME = "$HOME";
             TERM = "$TERM";
