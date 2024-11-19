@@ -33,7 +33,7 @@
   }: let
     bwrapCommand = buildBwrapCommand {
       bwrapPkg = bubblewrap;
-      execPath = (lib.strings.optionalString strace "${pkgs.strace}/bin/strace -f") + "${pkg}/bin/${name}";
+      execPath = (lib.strings.optionalString strace "${pkgs.strace}/bin/strace -f ") + (lib.getExe' pkg name);
       bindPaths = bindPaths;
       envs = envs;
       extraArgs = extraArgs;
