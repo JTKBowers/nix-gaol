@@ -2,12 +2,18 @@
   pkgs,
   lib,
   writeShellScriptBin,
+  writeClosure,
+  callPackage,
+  stdenvNoCC,
+  bubblewrap,
+  xdg-dbus-proxy,
+  cacert,
   ...
 }: rec {
-  getDeps = pkg: lib.strings.splitString "\n" (lib.strings.fileContents (pkgs.writeClosure pkg));
+  getDeps = pkg: lib.strings.splitString "\n" (lib.strings.fileContents (writeClosure pkg));
   getDepsMulti = packages: lib.lists.unique (builtins.concatMap getDeps packages);
 
-  buildBwrapCommand = pkgs.callPackage ./bwrap.nix {};
+  buildBwrapCommand = callPackage ./bwrap.nix {};
   generateWrapperScript = {
     pkg,
     name,
@@ -26,7 +32,7 @@
     dbus,
   }: let
     bwrapCommand = buildBwrapCommand {
-      bwrapPkg = pkgs.bubblewrap;
+      bwrapPkg = bubblewrap;
       execPath = (lib.strings.optionalString strace "${pkgs.strace}/bin/strace -f") + "${pkg}/bin/${name}";
       bindPaths = bindPaths;
       envs = envs;
@@ -42,7 +48,7 @@
     };
     busPath = "$(dirname ${dbus.proxyBusPath})";
     dbusProxy = wrapPackage {
-      pkg = pkgs.xdg-dbus-proxy;
+      pkg = xdg-dbus-proxy;
       name = "xdg-dbus-proxy";
       envs = {
         XDG_RUNTIME_DIR = "$XDG_RUNTIME_DIR";
@@ -71,7 +77,7 @@
       ${bwrapCommand}
     '';
   in
-    pkgs.stdenvNoCC.mkDerivation {
+    stdenvNoCC.mkDerivation {
       inherit name;
 
       phases = "installPhase";
@@ -146,7 +152,7 @@
       [pkg]
       ++ extraDepPkgs
       ++ lib.lists.optional strace pkgs.strace
-      ++ lib.lists.optional (builtins.elem "ssl" presets) pkgs.cacert
+      ++ lib.lists.optional (builtins.elem "ssl" presets) cacert
     );
     bindPaths = lib.lists.unique (
       pkgDeps
@@ -163,11 +169,11 @@
       ++ lib.lists.optionals (builtins.elem "ssl" presets) [
         # See https://github.com/NixOS/pkgs/blob/af11c51c47abb23e6730b34790fd47dc077b9eda/nixos/modules/security/ca.nix#L80
         {
-          srcPath = "${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt";
+          srcPath = "${cacert}/etc/ssl/certs/ca-bundle.crt";
           dstPath = "/etc/ssl/certs/ca-certificates.crt";
         }
         {
-          srcPath = "${pkgs.cacert.p11kit}/etc/ssl/trust-source";
+          srcPath = "${cacert.p11kit}/etc/ssl/trust-source";
           dstPath = "/etc/ssl/trust-source";
         }
         "/etc/resolv.conf"
