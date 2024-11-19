@@ -115,7 +115,7 @@
     };
     dbusProxyRunner = writeShellScriptBin "dbus-proxy-runner" ''
       mkdir -p ${busPath}
-      ${dbusProxy}/bin/xdg-dbus-proxy unix:path=${dbus.parentBusPath} ${dbus.proxyBusPath} --filter &
+      ${lib.getExe' dbusProxy "xdg-dbus-proxy"} unix:path=${dbus.parentBusPath} ${dbus.proxyBusPath} --filter &
       bg_pid=$!
       trap \"trap - SIGTERM && kill \$bg_pid\" SIGINT SIGTERM EXIT
       # Wait for the bus to exist before proceeding
@@ -125,7 +125,7 @@
     '';
     wrappedCommand = writeShellScriptBin "wrapped-${name}" ''
       set -e
-      ${lib.strings.optionalString dbus.enable "${dbusProxyRunner}/bin/dbus-proxy-runner"}
+      ${lib.strings.optionalString dbus.enable (lib.getExe' dbusProxyRunner "dbus-proxy-runner")}
       ${bwrapCommand}
     '';
   in
