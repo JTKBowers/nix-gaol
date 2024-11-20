@@ -1,5 +1,5 @@
 {
-  description = "A flake describing functions to wrap packages using bubblewrap";
+  description = "Easy sandboxing for the slightly paranoid Nix user";
   inputs.flake-utils.url = "github:numtide/flake-utils";
   outputs = {
     self,
