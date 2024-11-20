@@ -34,17 +34,19 @@
     bwrapCommand = buildBwrapCommand {
       bwrapPkg = bubblewrap;
       execPath = (lib.strings.optionalString strace "${pkgs.strace}/bin/strace -f ") + (lib.getExe' pkg name);
-      bindPaths = bindPaths;
-      envs = envs;
-      extraBwrapArgs = extraBwrapArgs;
-      shareUser = shareUser;
-      shareIpc = shareIpc;
-      sharePid = sharePid;
-      shareUts = shareUts;
-      shareNet = shareNet;
-      shareCgroup = shareCgroup;
-      clearEnv = clearEnv;
-      runtimeStorePaths = runtimeStorePaths;
+      inherit
+        bindPaths
+        envs
+        extraBwrapArgs
+        shareUser
+        shareIpc
+        sharePid
+        shareUts
+        shareNet
+        shareCgroup
+        clearEnv
+        runtimeStorePaths
+        ;
     };
     busPath = "$(dirname ${dbus.proxyBusPath})";
     dbusProxy = wrapPackage {
@@ -218,9 +220,12 @@
       };
   in
     generateWrapperScript {
-      pkg = pkg;
-      name = name;
-      bindPaths = bindPaths;
+      inherit
+        pkg
+        name
+        bindPaths
+        shareNet
+        ;
       envs = mergedEnvs;
       strace = linuxOptions'.strace;
       extraBwrapArgs = extraBwrapArgs';
@@ -228,7 +233,6 @@
       shareIpc = linuxOptions'.shareIpc;
       sharePid = linuxOptions'.sharePid;
       shareUts = linuxOptions'.shareUts;
-      shareNet = shareNet;
       shareCgroup = linuxOptions'.shareCgroup;
       clearEnv = linuxOptions'.clearEnv;
       runtimeStorePaths = runtimeStorePaths';
