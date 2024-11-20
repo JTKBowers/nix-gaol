@@ -20,7 +20,7 @@
     bindPaths,
     envs,
     strace,
-    extraArgs,
+    extraBwrapArgs,
     shareUser,
     shareIpc,
     sharePid,
@@ -36,7 +36,7 @@
       execPath = (lib.strings.optionalString strace "${pkgs.strace}/bin/strace -f ") + (lib.getExe' pkg name);
       bindPaths = bindPaths;
       envs = envs;
-      extraArgs = extraArgs;
+      extraBwrapArgs = extraBwrapArgs;
       shareUser = shareUser;
       shareIpc = shareIpc;
       sharePid = sharePid;
@@ -118,7 +118,7 @@
     envs ? {},
     extraDepPkgs ? [],
     strace ? false,
-    extraArgs ? [],
+    extraBwrapArgs ? [],
     shareUser ? false,
     shareIpc ? false,
     sharePid ? false,
@@ -143,9 +143,9 @@
       ++ lib.lists.optional (builtins.elem "graphics" presets) "/run/opengl-driver"
       ++ lib.lists.optional (builtins.elem "cursor" presets) "/run/current-system/sw/share/icons/Adwaita";
 
-    extraArgs' =
+    extraBwrapArgs' =
       lib.lists.optionals (builtins.elem "graphics" presets) ["--dev /dev" "--dev-bind /dev/dri /dev/dri"]
-      ++ extraArgs;
+      ++ extraBwrapArgs;
 
     # Build the nix-specific things into generic bwrap args
     pkgDeps = getDepsMulti (
@@ -203,7 +203,7 @@
       bindPaths = bindPaths;
       envs = mergedEnvs;
       strace = strace;
-      extraArgs = extraArgs';
+      extraBwrapArgs = extraBwrapArgs';
       shareUser = shareUser;
       shareIpc = shareIpc;
       sharePid = sharePid;

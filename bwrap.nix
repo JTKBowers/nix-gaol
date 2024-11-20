@@ -34,7 +34,7 @@ in
     bindPaths,
     runtimeStorePaths,
     envs,
-    extraArgs,
+    extraBwrapArgs,
     shareUser,
     shareIpc,
     sharePid,
@@ -54,7 +54,7 @@ in
     (generateEnvArgs envs)
     (map bindPath bindPaths)
     (lib.lists.optional (builtins.length runtimeStorePaths > 0) "$(nix-store --query --requisites ${builtins.concatStringsSep " " runtimeStorePaths} | sed \"s/\\(.*\\)/--ro-bind \\1 \\1/\")")
-    (builtins.toString extraArgs)
+    (builtins.toString extraBwrapArgs)
     execPath
     "\"$@\""
   ]))

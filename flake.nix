@@ -36,7 +36,7 @@
           pkg = pkgs.hello-wayland;
           name = "hello-wayland";
           presets = ["wayland"];
-          extraArgs = [
+          extraBwrapArgs = [
             "--dev /dev"
             "--proc /proc"
           ];
@@ -52,7 +52,7 @@
           pkg = pkgs.glxinfo;
           name = "eglinfo";
           presets = ["graphics" "wayland"];
-          extraArgs = [
+          extraBwrapArgs = [
             "--proc /proc"
           ];
         };
