@@ -16,7 +16,7 @@
     sandboxPolicies ? [], # A list of paths to extra sandbox policies. They will overwrite any earlier policies.
   }: {inherit sandboxPolicies;};
 in {
-  monitorSandboxCalls = writeShellScriptBin "monitor-sandbox" ''
+  monitor-sandbox = writeShellScriptBin "monitor-sandbox" ''
     log stream --style compact --predicate 'sender=="Sandbox"'
   '';
   wrapPackage = {

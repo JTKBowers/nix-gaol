@@ -14,7 +14,7 @@
         lib = pkgs.callPackage ./lib.nix {};
         wrapPackage = lib.wrapPackage;
       in {
-        inherit wrapPackage;
+        inherit wrapPackage lib;
         hello-bwrapped = wrapPackage {pkg = pkgs.hello;};
         curl-bwrapped = wrapPackage {
           pkg = pkgs.curl;
