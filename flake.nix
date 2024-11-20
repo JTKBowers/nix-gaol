@@ -19,42 +19,53 @@
         curl-bwrapped = wrapPackage {
           pkg = pkgs.curl;
           shareNet = true;
-          presets = ["ssl"];
+          linuxOptions = {
+            presets = ["ssl"];
+          };
         };
         helix-bwrapped = wrapPackage {
           pkg = pkgs.helix;
           name = "hx";
           bindCwd = true;
           extraDepPkgs = [pkgs.rust-analyzer pkgs.nil];
-          envs = {
-            HOME = "$HOME";
-            TERM = "$TERM";
-            COLORTERM = "$COLORTERM";
+          linuxOptions = {
+            strace = true;
+            envs = {
+              HOME = "$HOME";
+              TERM = "$TERM";
+              COLORTERM = "$COLORTERM";
+            };
           };
         };
         hello-wayland-bwrapped = wrapPackage {
           pkg = pkgs.hello-wayland;
           name = "hello-wayland";
-          presets = ["wayland"];
-          extraBwrapArgs = [
-            "--dev /dev"
-            "--proc /proc"
-          ];
+          linuxOptions = {
+            presets = ["wayland"];
+            extraBwrapArgs = [
+              "--dev /dev"
+              "--proc /proc"
+            ];
+          };
         };
 
         dbus-monitor = wrapPackage {
           pkg = pkgs.dbus;
           name = "dbus-monitor";
-          dbus.enable = true;
+          linuxOptions = {
+            dbus.enable = true;
+          };
         };
 
         eglinfo-bwrapped = wrapPackage {
           pkg = pkgs.glxinfo;
           name = "eglinfo";
-          presets = ["graphics" "wayland"];
-          extraBwrapArgs = [
-            "--proc /proc"
-          ];
+          linuxOptions = {
+            presets = ["graphics" "wayland"];
+            extraBwrapArgs = [
+              "--proc /proc"
+            ];
+          };
         };
       };
     })

@@ -109,34 +109,54 @@
         fi
       '';
     };
+  resolveLinuxOptions = {
+    envs ? {},
+    strace ? false,
+    shareUser ? false,
+    shareIpc ? false,
+    sharePid ? false,
+    shareUts ? false,
+    shareCgroup ? false,
+    clearEnv ? true,
+    dbus ? {
+      enable = false;
+    },
+    extraBwrapArgs ? [],
+    presets ? [],
+  }: {
+    inherit
+      envs
+      strace
+      shareUser
+      shareIpc
+      sharePid
+      shareUts
+      shareCgroup
+      clearEnv
+      dbus
+      extraBwrapArgs
+      presets
+      ;
+  };
+
   wrapPackage = {
     pkg,
     name ? pkg.pname,
     extraBindPaths ? [],
     runtimeStorePaths ? [],
     bindCwd ? false,
-    envs ? {},
     extraDepPkgs ? [],
-    strace ? false,
-    extraBwrapArgs ? [],
-    shareUser ? false,
-    shareIpc ? false,
-    sharePid ? false,
     shareNet ? false,
-    shareUts ? false,
-    shareCgroup ? false,
-    clearEnv ? true,
-    presets ? [],
-    dbus ? {
-      enable = false;
-    },
+    linuxOptions ? {},
   }: let
+    linuxOptions' = resolveLinuxOptions linuxOptions;
     dbus' = {
-      enable = dbus.enable or false;
+      enable = linuxOptions'.dbus.enable or false;
 
-      parentBusPath = dbus.parentBusPath or "$XDG_RUNTIME_DIR/bus";
-      proxyBusPath = dbus.proxyBusPath or "$XDG_RUNTIME_DIR/dbus-proxy/bus";
+      parentBusPath = linuxOptions'.dbus.parentBusPath or "$XDG_RUNTIME_DIR/bus";
+      proxyBusPath = linuxOptions'.dbus.proxyBusPath or "$XDG_RUNTIME_DIR/dbus-proxy/bus";
     };
+    presets = linuxOptions'.presets;
 
     runtimeStorePaths' =
       runtimeStorePaths
@@ -145,13 +165,13 @@
 
     extraBwrapArgs' =
       lib.lists.optionals (builtins.elem "graphics" presets) ["--dev /dev" "--dev-bind /dev/dri /dev/dri"]
-      ++ extraBwrapArgs;
+      ++ linuxOptions'.extraBwrapArgs;
 
     # Build the nix-specific things into generic bwrap args
     pkgDeps = getDepsMulti (
       [pkg]
       ++ extraDepPkgs
-      ++ lib.lists.optional strace pkgs.strace
+      ++ lib.lists.optional linuxOptions'.strace pkgs.strace
       ++ lib.lists.optional (builtins.elem "ssl" presets) cacert
     );
     bindPaths = lib.lists.unique (
@@ -185,7 +205,7 @@
       {
         PATH = "$PATH:${lib.strings.makeBinPath ([pkg] ++ extraDepPkgs)}";
       }
-      // envs
+      // linuxOptions'.envs
       // lib.attrsets.optionalAttrs (builtins.elem "wayland" presets) {
         XDG_RUNTIME_DIR = "$XDG_RUNTIME_DIR";
         WAYLAND_DISPLAY = "$WAYLAND_DISPLAY";
@@ -202,15 +222,15 @@
       name = name;
       bindPaths = bindPaths;
       envs = mergedEnvs;
-      strace = strace;
+      strace = linuxOptions'.strace;
       extraBwrapArgs = extraBwrapArgs';
-      shareUser = shareUser;
-      shareIpc = shareIpc;
-      sharePid = sharePid;
-      shareUts = shareUts;
+      shareUser = linuxOptions'.shareUser;
+      shareIpc = linuxOptions'.shareIpc;
+      sharePid = linuxOptions'.sharePid;
+      shareUts = linuxOptions'.shareUts;
       shareNet = shareNet;
-      shareCgroup = shareCgroup;
-      clearEnv = clearEnv;
+      shareCgroup = linuxOptions'.shareCgroup;
+      clearEnv = linuxOptions'.clearEnv;
       runtimeStorePaths = runtimeStorePaths';
       dbus = dbus';
     };
