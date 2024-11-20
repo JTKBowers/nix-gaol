@@ -6,14 +6,24 @@
     nixpkgs,
     flake-utils,
   }:
-    flake-utils.lib.eachDefaultSystem (system: {
-      packages = let
-        pkgs = import nixpkgs {
-          inherit system;
-        };
-        lib = pkgs.callPackage ./lib.nix {};
+    {
+      overlays.default = final: prev: let
+        lib = prev.callPackage ./lib.nix {};
         wrapPackage = lib.wrapPackage;
       in {
+        sandboxedPackages = builtins.mapAttrs (name: pkg: args: wrapPackage ({inherit pkg name;} // args)) prev;
+        monitor-sandbox = lib.monitor-sandbox; # TODO: Only populate on darwin
+        inherit wrapPackage;
+      };
+    }
+    // flake-utils.lib.eachDefaultSystem (system: let
+      pkgs = import nixpkgs {
+        inherit system;
+      };
+      lib = pkgs.callPackage ./lib.nix {};
+      wrapPackage = lib.wrapPackage;
+    in {
+      packages = {
         inherit wrapPackage lib;
         hello-bwrapped = wrapPackage {pkg = pkgs.hello;};
         curl-bwrapped = wrapPackage {
