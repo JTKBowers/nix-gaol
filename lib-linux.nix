@@ -1,5 +1,4 @@
 {
-  pkgs,
   lib,
   writeShellScriptBin,
   writeClosure,
@@ -8,6 +7,7 @@
   bubblewrap,
   xdg-dbus-proxy,
   cacert,
+  strace,
   ...
 }: rec {
   getDeps = pkg: lib.strings.splitString "\n" (lib.strings.fileContents (writeClosure pkg));
@@ -19,7 +19,7 @@
     name,
     bindPaths,
     envs,
-    strace,
+    useStrace,
     extraBwrapArgs,
     shareUser,
     shareIpc,
@@ -33,7 +33,7 @@
   }: let
     bwrapCommand = buildBwrapCommand {
       bwrapPkg = bubblewrap;
-      execPath = (lib.strings.optionalString strace "${pkgs.strace}/bin/strace -f ") + (lib.getExe' pkg name);
+      execPath = (lib.strings.optionalString useStrace "${lib.getExe strace} -f ") + (lib.getExe' pkg name);
       inherit
         bindPaths
         envs
@@ -173,7 +173,7 @@
     pkgDeps = getDepsMulti (
       [pkg]
       ++ extraDepPkgs
-      ++ lib.lists.optional linuxOptions'.strace pkgs.strace
+      ++ lib.lists.optional linuxOptions'.strace strace
       ++ lib.lists.optional (builtins.elem "ssl" presets) cacert
     );
     bindPaths = lib.lists.unique (
@@ -227,7 +227,7 @@
         shareNet
         ;
       envs = mergedEnvs;
-      strace = linuxOptions'.strace;
+      useStrace = linuxOptions'.strace;
       extraBwrapArgs = extraBwrapArgs';
       shareUser = linuxOptions'.shareUser;
       shareIpc = linuxOptions'.shareIpc;
