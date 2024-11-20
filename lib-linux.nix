@@ -111,6 +111,13 @@
         fi
       '';
     };
+  resolveDbusOptions = {
+    enable ? false,
+    parentBusPath ? "$XDG_RUNTIME_DIR/bus",
+    proxyBusPath ? "$XDG_RUNTIME_DIR/dbus-proxy/bus",
+  }: {
+    inherit enable parentBusPath proxyBusPath;
+  };
   resolveLinuxOptions = {
     envs ? {},
     strace ? false,
@@ -152,12 +159,7 @@
     linuxOptions ? {},
   }: let
     linuxOptions' = resolveLinuxOptions linuxOptions;
-    dbus' = {
-      enable = linuxOptions'.dbus.enable or false;
-
-      parentBusPath = linuxOptions'.dbus.parentBusPath or "$XDG_RUNTIME_DIR/bus";
-      proxyBusPath = linuxOptions'.dbus.proxyBusPath or "$XDG_RUNTIME_DIR/dbus-proxy/bus";
-    };
+    dbus = resolveDbusOptions linuxOptions'.dbus;
     presets = linuxOptions'.presets;
 
     runtimeStorePaths' =
@@ -201,7 +203,7 @@
         "/etc/resolv.conf"
       ]
       ++ lib.lists.optional (builtins.elem "wayland" presets) ["$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY"]
-      ++ lib.lists.optional dbus'.enable dbus'.proxyBusPath
+      ++ lib.lists.optional dbus.enable dbus.proxyBusPath
     );
     mergedEnvs =
       {
@@ -215,8 +217,8 @@
       // lib.attrsets.optionalAttrs (builtins.elem "cursor" presets) {
         XCURSOR_PATH = "/run/current-system/sw/share/icons";
       }
-      // lib.attrsets.optionalAttrs dbus'.enable {
-        DBUS_SESSION_BUS_ADDRESS = "unix:path=${dbus'.proxyBusPath}";
+      // lib.attrsets.optionalAttrs dbus.enable {
+        DBUS_SESSION_BUS_ADDRESS = "unix:path=${dbus.proxyBusPath}";
       };
   in
     generateWrapperScript {
@@ -225,6 +227,7 @@
         name
         bindPaths
         shareNet
+        dbus
         ;
       envs = mergedEnvs;
       useStrace = linuxOptions'.strace;
@@ -236,6 +239,5 @@
       shareCgroup = linuxOptions'.shareCgroup;
       clearEnv = linuxOptions'.clearEnv;
       runtimeStorePaths = runtimeStorePaths';
-      dbus = dbus';
     };
 }
