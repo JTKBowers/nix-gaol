@@ -49,7 +49,7 @@
         ;
     };
     busPath = "$(dirname ${dbus.proxyBusPath})";
-    dbusProxy = wrapPackage {
+    dbusProxy = sandboxPackage {
       pkg = xdg-dbus-proxy;
       name = "xdg-dbus-proxy";
       envs = {
@@ -148,7 +148,7 @@
       ;
   };
 
-  wrapPackage = {
+  sandboxPackage = {
     pkg,
     name ? pkg.pname,
     extraBindPaths ? [],

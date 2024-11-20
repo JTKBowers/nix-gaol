@@ -19,7 +19,7 @@ in {
   monitor-sandbox = writeShellScriptBin "monitor-sandbox" ''
     log stream --style compact --predicate 'sender=="Sandbox"'
   '';
-  wrapPackage = {
+  sandboxPackage = {
     pkg,
     name ? pkg.pname,
     extraBindPaths ? [],

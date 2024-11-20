@@ -9,11 +9,11 @@
     {
       overlays.default = final: prev: let
         lib = prev.callPackage ./lib.nix {};
-        wrapPackage = lib.wrapPackage;
+        sandboxPackage = lib.sandboxPackage;
       in {
-        sandboxedPackages = builtins.mapAttrs (name: pkg: args: wrapPackage ({inherit pkg name;} // args)) prev;
+        sandboxedPackages = builtins.mapAttrs (name: pkg: args: sandboxPackage ({inherit pkg name;} // args)) prev;
         monitor-sandbox = lib.monitor-sandbox; # TODO: Only populate on darwin
-        inherit wrapPackage;
+        inherit sandboxPackage;
       };
     }
     // flake-utils.lib.eachDefaultSystem (system: let
@@ -21,19 +21,20 @@
         inherit system;
       };
       lib = pkgs.callPackage ./lib.nix {};
-      wrapPackage = lib.wrapPackage;
+      sandboxPackage = lib.sandboxPackage;
     in {
       packages = {
-        inherit wrapPackage lib;
-        sandboxed-hello = wrapPackage {pkg = pkgs.hello;};
-        sandboxed-curl = wrapPackage {
+        inherit lib;
+        sandboxPackage = sandboxPackage;
+        sandboxed-hello = sandboxPackage {pkg = pkgs.hello;};
+        sandboxed-curl = sandboxPackage {
           pkg = pkgs.curl;
           shareNet = true;
           linuxOptions = {
             presets = ["ssl"];
           };
         };
-        sandboxed-helix = wrapPackage {
+        sandboxed-helix = sandboxPackage {
           pkg = pkgs.helix;
           name = "hx";
           bindCwd = true;
@@ -47,7 +48,7 @@
             };
           };
         };
-        sandboxed-hello-wayland = wrapPackage {
+        sandboxed-hello-wayland = sandboxPackage {
           pkg = pkgs.hello-wayland;
           name = "hello-wayland";
           linuxOptions = {
@@ -59,7 +60,7 @@
           };
         };
 
-        sandboxed-dbus-monitor = wrapPackage {
+        sandboxed-dbus-monitor = sandboxPackage {
           pkg = pkgs.dbus;
           name = "dbus-monitor";
           linuxOptions = {
@@ -67,7 +68,7 @@
           };
         };
 
-        sandboxed-eglinfo = wrapPackage {
+        sandboxed-eglinfo = sandboxPackage {
           pkg = pkgs.glxinfo;
           name = "eglinfo";
           linuxOptions = {
