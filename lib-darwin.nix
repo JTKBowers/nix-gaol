@@ -36,6 +36,7 @@ in {
       []
       ++ lib.lists.optional (bindCwd == true) ./macos-policies/cwd-rw.sb
       ++ lib.lists.optional (bindCwd == "ro") ./macos-policies/cwd-ro.sb
+      ++ lib.lists.optional shareNet ./macos-policies/network.sb
       ++ darwinOptions'.sandboxPolicies;
     policyImports = (
       builtins.map

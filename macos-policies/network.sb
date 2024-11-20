@@ -1,0 +1,5 @@
+(allow file-read*
+  (literal "/Library/Preferences/com.apple.networkd.plist")
+  (literal "/private/etc/hosts")
+)
+(allow network-inbound network-outbound)
