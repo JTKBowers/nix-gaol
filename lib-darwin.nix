@@ -32,7 +32,10 @@ in {
     darwinOptions ? {},
   }: let
     darwinOptions' = resolveDarwinOptions darwinOptions;
-    policyDocuments = darwinOptions'.sandboxPolicies;
+    policyDocuments =
+      darwinOptions'.sandboxPolicies
+      ++ lib.lists.optional (bindCwd == true) ./macos-policies/cwd-rw.sb
+      ++ lib.lists.optional (bindCwd == "ro") ./macos-policies/cwd-ro.sb;
     policyImports = (
       builtins.map
       (policyPath: "(import \"${policyPath}\")")
