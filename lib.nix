@@ -3,5 +3,5 @@
   callPackage,
 }:
 if stdenv.isDarwin
-then builtins.abort "Darwin support is unimplemented"
+then (callPackage ./lib-darwin.nix {})
 else (callPackage ./lib-linux.nix {})
