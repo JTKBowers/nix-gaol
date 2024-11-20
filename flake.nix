@@ -25,15 +25,15 @@
     in {
       packages = {
         inherit wrapPackage lib;
-        hello-bwrapped = wrapPackage {pkg = pkgs.hello;};
-        curl-bwrapped = wrapPackage {
+        sandboxed-hello = wrapPackage {pkg = pkgs.hello;};
+        sandboxed-curl = wrapPackage {
           pkg = pkgs.curl;
           shareNet = true;
           linuxOptions = {
             presets = ["ssl"];
           };
         };
-        helix-bwrapped = wrapPackage {
+        sandboxed-helix = wrapPackage {
           pkg = pkgs.helix;
           name = "hx";
           bindCwd = true;
@@ -47,7 +47,7 @@
             };
           };
         };
-        hello-wayland-bwrapped = wrapPackage {
+        sandboxed-hello-wayland = wrapPackage {
           pkg = pkgs.hello-wayland;
           name = "hello-wayland";
           linuxOptions = {
@@ -59,7 +59,7 @@
           };
         };
 
-        dbus-monitor = wrapPackage {
+        sandboxed-dbus-monitor = wrapPackage {
           pkg = pkgs.dbus;
           name = "dbus-monitor";
           linuxOptions = {
@@ -67,7 +67,7 @@
           };
         };
 
-        eglinfo-bwrapped = wrapPackage {
+        sandboxed-eglinfo = wrapPackage {
           pkg = pkgs.glxinfo;
           name = "eglinfo";
           linuxOptions = {

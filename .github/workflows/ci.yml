@@ -21,7 +21,6 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
-      - run: ls -la
       - uses: DeterminateSystems/nix-installer-action@main
       - uses: DeterminateSystems/magic-nix-cache-action@main
-      - run: nix build '.#hello-bwrapped'
+      - run: nix build '.#sandboxed-hello'
