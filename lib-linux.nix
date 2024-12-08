@@ -157,6 +157,7 @@
     extraDepPkgs ? [],
     shareNet ? false,
     linuxOptions ? {},
+    darwinOptions ? {},
   }: let
     linuxOptions' = resolveLinuxOptions linuxOptions;
     dbus = resolveDbusOptions linuxOptions'.dbus;
