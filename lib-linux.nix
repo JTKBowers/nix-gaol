@@ -87,7 +87,7 @@
       installPhase = ''
         mkdir -p $out
         mkdir -p $out/bin
-        cp ${wrappedCommand}/bin/wrapped-${name} $out/bin/wrapped-${name}
+        cp ${wrappedCommand}/bin/wrapped-${name} $out/bin/${name}
         if [ -d "${pkg}/share" ]; then
           cp -a "${pkg}/share" "$out/share"
 
