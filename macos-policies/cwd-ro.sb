@@ -1,1 +1,2 @@
+(allow file-read-data (literal (param "cwd"))) ; Allow access to the directory itself, not its contents
 (allow file-read* (subpath (param "cwd")))
